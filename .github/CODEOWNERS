@@ -1,0 +1,4 @@
+# CODEOWNERS — shared review model (no fixed Dev A / Dev B zones).
+# Every PR auto-requests review from BOTH devs.
+# Replace @DevA and @DevB with your actual GitHub usernames.
+*  @yerdnarthc @jacy-sangre
