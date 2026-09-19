@@ -199,7 +199,7 @@ Use GitHub Projects or this table (copy into a `TRACKING.md` or Project board). 
 | ID | Phase | Task | Claimed by | Files | Status |
 |---|---|---|---|---|---|
 | P0-1 | 0 | Repo + CODEOWNERS + PR template | — (yerdnarthc) | `.github/` | done |
-| P1-1 | 1 | Freeze MF breakpoints + rule matrix + MF matplotlib diagram generator | Both (pair) | `config.py` | calibration-in-progress (yerdnarthc & jacy-sangre) |
+| P1-1 | 1 | Freeze MF breakpoints + rule matrix + MF matplotlib diagram generator | Both (pair) | `config.py` | done (yerdnarthc & jacy-sangre) |
 | P2-1 | 2 | `membership.py` + unit tests | — (claim; both review — Q&A coverage) | `backend/fuzzy/` | todo |
 | P2-2 | 2 | `rules.py` + `inference.py` + centroid | — (claim; both review — Q&A coverage) | `backend/fuzzy/` | todo |
 | P2-3 | 2 | Flask `/api/fuzzy/evaluate` + CORS | — (claim) | `app.py` | todo |
@@ -315,4 +315,4 @@ No Next.js, Node backend, DB, auth, Docker, MQTT/ESP32, weather API, ML/CV, mobi
 
 ---
 
-*Next step: Phase 1 together (freeze `config.py`), then pair on Phase 2 (fuzzy engine) so both can defend it — claim Phase 3+ tasks openly in §5.4.*
+*Phase 1 complete: `backend/fuzzy/config.py` now holds the pair-agreed MF breakpoints + rule matrix + `docs/figures/mf-*.png` verified. Next: pair on Phase 2 (fuzzy engine `membership.py / rules.py / inference.py`) so both can defend it — claim Phase 3+ tasks openly in §5.4.*
