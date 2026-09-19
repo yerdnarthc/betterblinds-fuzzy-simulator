@@ -40,22 +40,22 @@ LIGHT_MFS = {
     # Dark: covers normal light and below. Trap so 0–~180 is fully dark.
     "Dark":       {
                     "kind": "trap", 
-                    "points": (0, 0, 150, 350)
+                    "points": (0, 0, 200, 250)
                   },
     # Moderate: the middle-lower hump.
     "Moderate":   {
                     "kind": "tri", 
-                    "points": (200, 400, 600)
+                    "points": (200, 250, 535)
                   },
     # Bright: middle-upper hump. Overlaps both neighbors.
     "Bright":     {
                     "kind": "tri", 
-                    "points": (450, 650, 850)
+                    "points": (250, 535, 819)
                   },
     # VeryBright: harsh light and above. Trap so 900–1023 stays fully bright.
     "VeryBright": {
                     "kind": "trap", 
-                    "points": (700, 900, 1023, 1023)
+                    "points": (700, 819, 1023, 1023)
                   },
 }
 
@@ -66,15 +66,15 @@ LIGHT_MFS = {
 DELTA_LIGHT_MFS = {
     "Falling": {
                 "kind": "trap", 
-                "points": (-200, -200, -80, 0)
+                "points": (-200, -200, -40, -15)
                },
     "Stable":  {
-                "kind": "tri",  
-                "points": (-60, 0, 60)
+                "kind": "trap",  
+                "points": (-40, -15, 15, 40)
                },
     "Rising":  {
                 "kind": "trap", 
-                "points": (0, 80, 200, 200)
+                "points": (15, 40, 200, 200)
                },
 }
 
@@ -84,23 +84,23 @@ DELTA_LIGHT_MFS = {
 MOTOR_MFS = {
     "FastOpen":  {
                     "kind": "tri", 
-                    "points": (-100, -100, -60)
+                    "points": (-100, -100, -50)
                  },
     "SlowOpen":  {
                     "kind": "tri", 
-                    "points": (-80, -40, 0)
+                    "points": (-100, -50, 0)
                  },
     "Stop":      {
                     "kind": "tri", 
-                    "points": (-20, 0, 20)
+                    "points": (-50, 0, 50)
                  },
     "SlowClose": {
                     "kind": "tri", 
-                    "points": (0, 40, 80)
+                    "points": (0, 50, 100)
                  },
     "FastClose": {
                     "kind": "tri", 
-                    "points": (60, 100, 100)
+                    "points": (50, 100, 100)
                  },
 }
 
