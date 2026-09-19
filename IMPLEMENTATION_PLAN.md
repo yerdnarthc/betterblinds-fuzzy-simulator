@@ -200,10 +200,10 @@ Use GitHub Projects or this table (copy into a `TRACKING.md` or Project board). 
 |---|---|---|---|---|---|
 | P0-1 | 0 | Repo + CODEOWNERS + PR template | — (yerdnarthc) | `.github/` | done |
 | P1-1 | 1 | Freeze MF breakpoints + rule matrix + MF matplotlib diagram generator | Both (pair) | `config.py` | done (yerdnarthc & jacy-sangre) |
-| P2-1 | 2 | `membership.py` + unit tests | — (claim; both review — Q&A coverage) | `backend/fuzzy/` | todo |
-| P2-2 | 2 | `rules.py` + `inference.py` + centroid | — (claim; both review — Q&A coverage) | `backend/fuzzy/` | todo |
-| P2-3 | 2 | Flask `/api/fuzzy/evaluate` + CORS | — (claim) | `app.py` | todo |
-| P3-1 | 3 | Vite+TS scaffold + `types.ts` + `api.ts` | — (claim) | `frontend/src/` | todo |
+| P2-1 | 2 | `membership.py` + unit tests | jacy-sangre (both review — Q&A coverage) | `backend/fuzzy/` | in-review |
+| P2-2 | 2 | `rules.py` + `inference.py` + centroid | jacy-sangre (both review — Q&A coverage) | `backend/fuzzy/` | in-review |
+| P2-3 | 2 | Flask `/api/fuzzy/evaluate` + CORS | jacy-sangre | `app.py` | in-review |
+| P3-1 | 3 | Vite+TS scaffold + `types.ts` + `api.ts` | jacy-sangre | `frontend/src/` | in-review |
 | P4-1 | 4 | SVG classroom scene + blinds animation | — (claim) | `ClassroomScene.tsx` | todo |
 | P5-1 | 5 | Fuzzy panel (memberships + rules + output) | — (claim) | `FuzzyPanel.tsx` | todo |
 | P6-1 | 6 | MF charts + 3D control surface | — (claim) | `MembershipChart`, `ControlSurface` | todo |
