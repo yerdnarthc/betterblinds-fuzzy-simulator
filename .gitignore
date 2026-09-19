@@ -1,0 +1,12 @@
+# Dependencies
+node_modules/
+frontend/dist/
+
+# Python
+venv/
+.venv/
+__pycache__/
+*.pyc
+
+# Local env / secrets (never commit these)
+.env
