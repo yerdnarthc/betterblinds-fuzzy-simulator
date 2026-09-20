@@ -25,6 +25,7 @@ function App() {
   const [debugRays, setDebugRays] = useState(false)
   const [result, setResult] = useState<FuzzyEvaluateResponse | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [blindPosition, setBlindPosition] = useState(50) // start half-closed
 
   // Kick: every Light move measures its own delta, clamped to the ΔL domain.
   useEffect(() => {
@@ -54,6 +55,10 @@ function App() {
         .then((response) => {
           setResult(response)
           setError(null)
+          // Integrate the motor command into a blind position. Because the
+          // movement comes from U itself, on-screen direction always matches
+          // the `direction` field — no separate animation logic to drift.
+          setBlindPosition((pos) => clampBlind(pos + BLIND_SPEED * response.motorCommand))
         })
         .catch((err: unknown) => {
           setError(err instanceof Error ? err.message : 'Unknown error')
