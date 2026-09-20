@@ -1,8 +1,8 @@
 /* App shell — enlarged, pixel-system aligned */
 
 #app-shell {
-  padding: 0 28px 40px;
-  max-width: 1360px;
+  padding: 0 20px 32px;
+  max-width: 2560px;
   margin: 0 auto;
   width: 100%;
   box-sizing: border-box;
@@ -10,46 +10,30 @@
 
 #app-shell > h1 {
   border-bottom: 3px solid var(--border);
-  padding-bottom: 16px;
-  margin-bottom: 24px;
+  padding-bottom: 12px;
+  margin-bottom: 18px;
 }
 
+/* Scene column is fluid (the hero), fuzzy panel column is a constant
+   width. --scene-h (measured in App.tsx via ResizeObserver) locks the
+   panel's own height to match the scene exactly, so the two columns are
+   always the same size and it scrolls internally instead of growing. */
 #main-panels {
   display: grid;
-  grid-template-columns: minmax(0, 1.55fr) minmax(340px, 0.9fr);
-  gap: 28px;
+  grid-template-columns: minmax(0, 1fr) clamp(300px, 26vw, 400px);
+  gap: 20px;
   align-items: start;
   text-align: left;
 }
 
-#fuzzy-panel-placeholder {
-  border: 3px solid var(--border);
-  border-radius: 6px;
-  box-shadow: 6px 6px 0 rgba(0, 0, 0, 0.45);
-  padding: 20px;
-  overflow: auto;
-  background: var(--bg-elevated);
-  min-height: 520px;
+.scene-wrap {
+  min-width: 0;
 }
 
-#fuzzy-panel-placeholder pre {
-  background: var(--code-bg);
-  border-radius: 6px;
-  border: 1px solid var(--border-strong);
-  padding: 14px;
-  font-size: 12px;
-  line-height: 1.5;
-  max-height: 560px;
-  overflow: auto;
-  white-space: pre-wrap;
-  word-break: break-word;
-}
-
-#fuzzy-panel-placeholder h2 {
-  color: var(--accent);
-  border-bottom: 1px solid var(--border);
-  padding-bottom: 10px;
-  margin-bottom: 14px;
+@media (max-width: 900px) {
+  #main-panels {
+    grid-template-columns: 1fr;
+  }
 }
 
 #controls {
@@ -62,6 +46,30 @@
   border-radius: 6px;
   box-shadow: 6px 6px 0 rgba(0, 0, 0, 0.35);
   padding: 20px 22px;
+}
+
+/* Phase 6: MF plots + 3D control surface. MembershipChart's two curves are
+   now stacked (not side-by-side), so it doesn't need as much width —
+   ControlSurface gets the larger share since the 3D plot benefits most
+   from more canvas. */
+#charts {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.8fr);
+  gap: 20px;
+  margin-top: 20px;
+}
+
+@media (max-width: 1100px) {
+  #charts {
+    grid-template-columns: 1fr;
+  }
+}
+
+.chart-fallback {
+  grid-column: 1 / -1;
+  color: var(--text-dim);
+  padding: 40px 0;
+  text-align: center;
 }
 
 #controls label {
@@ -250,11 +258,3 @@
   padding: 10px 12px;
 }
 
-@media (max-width: 1100px) {
-  #main-panels {
-    grid-template-columns: 1fr;
-  }
-  #fuzzy-panel-placeholder {
-    min-height: auto;
-  }
-}

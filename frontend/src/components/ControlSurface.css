@@ -1,0 +1,27 @@
+.cs-card {
+  border: 3px solid var(--border);
+  border-radius: 6px;
+  box-shadow: 6px 6px 0 rgba(0, 0, 0, 0.45);
+  padding: 20px;
+  background: var(--bg-elevated);
+  text-align: left;
+}
+
+.cs-card h3 {
+  font-size: 12px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  margin: 0 0 8px;
+}
+
+.cs-caption {
+  color: var(--text);
+  font-size: 12px;
+  line-height: 1.5;
+  margin: 0 0 14px;
+}
+
+.cs-loading {
+  color: var(--text-dim);
+}

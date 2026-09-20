@@ -10,15 +10,21 @@ from .config import MAMDANI, MOTOR_MFS, MOTOR_RANGE
 from .membership import evaluate_mf
 
 
-def sample_points():
-    """MAMDANI["samples"] evenly spaced x-values across MOTOR_RANGE."""
+def sample_points(samples=None):
+    """`samples` evenly spaced x-values across MOTOR_RANGE.
+
+    Defaults to MAMDANI["samples"] (config.py's frozen resolution for
+    /api/fuzzy/evaluate). Callers that re-run this many times per request
+    (the Phase 6 control-surface sweep) may pass a smaller override —
+    see fuzzy/surface.py for why that's a safe trade-off.
+    """
     lo, hi = MOTOR_RANGE
-    n = MAMDANI["samples"]
+    n = samples if samples is not None else MAMDANI["samples"]
     step = (hi - lo) / (n - 1)
     return [lo + i * step for i in range(n)]
 
 
-def aggregate(fired_rules):
+def aggregate(fired_rules, samples=None):
     """fired_rules: output of rules.active_rules().
 
     Returns (xs, ys, peak_by_output):
@@ -27,7 +33,7 @@ def aggregate(fired_rules):
                          output set, useful for the "aggregated output" bars
                          in the UI (Phase 5) without re-walking the rules.
     """
-    xs = sample_points()
+    xs = sample_points(samples)
     ys = [0.0] * len(xs)
     peak_by_output = {name: 0.0 for name in MOTOR_MFS}
 

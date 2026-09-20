@@ -1,0 +1,28 @@
+.mc-card {
+  border: 3px solid var(--border);
+  border-radius: 6px;
+  box-shadow: 6px 6px 0 rgba(0, 0, 0, 0.45);
+  padding: 20px;
+  background: var(--bg-elevated);
+  text-align: left;
+}
+
+.mc-card h3 {
+  font-size: 12px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  margin: 0 0 14px;
+}
+
+.mc-loading {
+  color: var(--text-dim);
+}
+
+/* Stacked, not side-by-side: each chart gets the card's full width instead
+   of splitting it, so the curves render bigger/more legible. */
+.mc-charts {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+}

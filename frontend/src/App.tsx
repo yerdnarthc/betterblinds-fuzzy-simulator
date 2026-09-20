@@ -1,7 +1,15 @@
-import { useEffect, useRef, useState } from 'react'
+import { lazy, Suspense, useEffect, useRef, useState } from 'react'
+import type { CSSProperties } from 'react'
 import { evaluateFuzzy } from './api'
 import ClassroomScene from './components/ClassroomScene'
+import FuzzyPanel from './components/FuzzyPanel'
 import type { FuzzyEvaluateResponse } from './types'
+
+// Plotly (with 3D/gl3d support for the control surface) is a multi-MB
+// dependency — lazy-loaded so it doesn't block first paint of the scene,
+// which is what a viewer sees first and what the animations run on.
+const MembershipChart = lazy(() => import('./components/MembershipChart'))
+const ControlSurface = lazy(() => import('./components/ControlSurface'))
 import './App.css'
 
 function clampDelta(value: number): number {
@@ -9,6 +17,23 @@ function clampDelta(value: number): number {
 }
 
 function App() {
+  // Measured so the fuzzy panel can lock its own height to match the scene
+  // exactly (CSS alone can't do this: two grid columns with independent
+  // intrinsic heights can't reference each other without JS). Mirrors the
+  // ResizeObserver pattern ClassroomScene's LightingLayer already uses.
+  const sceneWrapRef = useRef<HTMLDivElement>(null)
+  const [sceneHeight, setSceneHeight] = useState(0)
+
+  useEffect(() => {
+    const el = sceneWrapRef.current
+    if (!el) return
+    const observer = new ResizeObserver(([entry]) => {
+      if (entry) setSceneHeight(entry.contentRect.height)
+    })
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [])
+
   const [lightIntensity, setLightIntensity] = useState(742)
   // Manual ΔL (used only when auto-derive is off — e.g. hand-probing the
   // rule matrix for Q&A without moving the Light slider).
@@ -67,28 +92,21 @@ function App() {
     <div id="app-shell">
       <h1>BetterBlinds Fuzzy Simulator</h1>
 
-      <section id="main-panels">
-        <ClassroomScene
-          lightIntensity={lightIntensity}
-          lightChange={lightChange}
-          motorCommand={result?.motorCommand ?? 0}
-          direction={result?.direction ?? 'stop'}
-          sunAngle={sunAngle}
-          debugRays={debugRays}
-        />
-        <div id="fuzzy-panel-placeholder">
-          <h2>Fuzzy Panel (Phase 5 will style this)</h2>
-          {error && (
-            <p className="error" role="alert">
-              {error}
-              <br />
-              <small>
-                Tip: you need two terminals — backend on :5000 and frontend on :5173. See README Quickstart.
-              </small>
-            </p>
-          )}
-          <pre>{result ? JSON.stringify(result, null, 2) : error ? '—' : 'Loading...'}</pre>
+      <section
+        id="main-panels"
+        style={{ '--scene-h': sceneHeight ? `${sceneHeight}px` : '640px' } as CSSProperties}
+      >
+        <div className="scene-wrap" ref={sceneWrapRef}>
+          <ClassroomScene
+            lightIntensity={lightIntensity}
+            lightChange={lightChange}
+            motorCommand={result?.motorCommand ?? 0}
+            direction={result?.direction ?? 'stop'}
+            sunAngle={sunAngle}
+            debugRays={debugRays}
+          />
         </div>
+        <FuzzyPanel result={result} error={error} />
       </section>
 
       <section id="controls">
@@ -141,6 +159,17 @@ function App() {
           />
           Show light rays (debug)
         </label>
+      </section>
+
+      <section id="charts">
+        <Suspense fallback={<div className="chart-fallback">Loading charts...</div>}>
+          <MembershipChart currentLight={lightIntensity} currentDelta={lightChange} />
+          <ControlSurface
+            currentLight={lightIntensity}
+            currentDelta={lightChange}
+            currentMotorCommand={result?.motorCommand ?? 0}
+          />
+        </Suspense>
       </section>
     </div>
   )
