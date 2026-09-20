@@ -75,18 +75,69 @@
   fill: #fec837;
 }
 
-.scene-readout {
+.scene {
+  min-height: 560px;
   display: flex;
+  flex-direction: column;
+}
+
+.scene-stage {
+  position: relative;
+  flex: 1;
+  min-height: 460px;
+}
+
+.scene-readout {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 16px;
   align-items: center;
-  gap: 12px;
-  flex-wrap: wrap;
-  padding: 10px 14px;
+  padding: 14px 16px;
   font-family: ui-monospace, Consolas, monospace;
   font-size: 14px;
   letter-spacing: 1px;
   color: #f2ede0;
   background: #22333a;
   border-top: 3px solid #1c2b30;
+}
+
+.readout-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  min-width: 0;
+}
+
+.readout-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  border-left: 1px solid rgba(255, 255, 255, 0.08);
+  padding-left: 12px;
+}
+
+.readout-item:first-child {
+  border-left: none;
+  padding-left: 0;
+}
+
+.readout-k {
+  font-size: 10px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: #6e8892;
+  line-height: 1;
+}
+
+.readout-v {
+  font-size: 13px;
+  font-weight: 700;
+  color: #f2ede0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.2;
 }
 
 /* State badge: the text channel of the 7-state motion language. */
@@ -182,15 +233,27 @@
   }
 }
 
-/* Layout for the shell: two panels side by side on desktop, stacked below. */
+/* Layout for the shell: two panels side by side on desktop, stacked below.
+   Enlarged to give the Classroom Scene breathing room and prevent label
+   overflow — single source, overrides any duplicate in App.css. */
 #app-shell {
-  padding: 0 24px 40px;
+  padding: 0 28px 48px;
+  max-width: 1360px;
+  margin: 0 auto;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+#app-shell > h1 {
+  border-bottom: 3px solid var(--border);
+  padding-bottom: 16px;
+  margin-bottom: 28px;
 }
 
 #main-panels {
   display: grid;
-  grid-template-columns: 1.2fr 1fr;
-  gap: 20px;
+  grid-template-columns: minmax(0, 1.55fr) minmax(360px, 0.85fr);
+  gap: 28px;
   align-items: start;
   text-align: left;
 }
@@ -198,33 +261,53 @@
 #fuzzy-panel-placeholder {
   border: 3px solid #1c2b30;
   border-radius: 6px;
-  box-shadow: 6px 6px 0 rgba(0, 0, 0, 0.35);
-  padding: 16px;
+  box-shadow: 6px 6px 0 rgba(0, 0, 0, 0.45);
+  padding: 20px;
   overflow: auto;
-  background: var(--bg);
+  background: var(--bg-elevated);
+  min-height: 520px;
 }
 
 #fuzzy-panel-placeholder pre {
   background: var(--code-bg);
-  border-radius: 8px;
-  padding: 12px;
-  font-size: 13px;
-  max-height: 420px;
+  border: 1px solid var(--border-strong);
+  border-radius: 6px;
+  padding: 14px;
+  font-size: 12px;
+  line-height: 1.5;
+  max-height: 560px;
   overflow: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+#fuzzy-panel-placeholder h2 {
+  color: var(--accent);
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 10px;
+  margin-bottom: 14px;
 }
 
 #controls {
   display: grid;
-  gap: 12px;
-  margin-top: 20px;
+  gap: 16px;
+  margin-top: 28px;
   text-align: left;
+  background: var(--bg-elevated);
+  border: 3px solid var(--border);
+  border-radius: 6px;
+  box-shadow: 6px 6px 0 rgba(0, 0, 0, 0.35);
+  padding: 20px 22px;
 }
 
 #controls label {
   display: grid;
-  gap: 6px;
-  font-weight: 500;
-  color: var(--text-h);
+  gap: 8px;
+  font-weight: 700;
+  font-size: 12px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--text-dim);
 }
 
 /* Accessibility: 44px touch target, visible focus,
@@ -287,8 +370,31 @@
   padding: 10px 12px;
 }
 
-@media (max-width: 900px) {
+@media (max-width: 1100px) {
   #main-panels {
     grid-template-columns: 1fr;
+  }
+  #fuzzy-panel-placeholder {
+    min-height: auto;
+  }
+}
+
+@media (max-width: 640px) {
+  .scene-readout {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  .readout-grid {
+    grid-template-columns: 1fr;
+  }
+  .readout-item {
+    border-left: none;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    padding-left: 0;
+    padding-top: 8px;
+  }
+  .readout-item:first-child {
+    border-top: none;
+    padding-top: 0;
   }
 }

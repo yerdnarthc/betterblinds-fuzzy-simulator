@@ -539,12 +539,24 @@ export default function ClassroomScene({
       />
       </div>
 
-      {/* readout: chunky state badge first, then the numbers */}
       <figcaption className="scene-readout">
         <span className={`state-badge ${direction === 'stop' || level === 0 ? 'is-stop' : direction === 'close' ? 'is-close' : 'is-open'}`}>
           {`${stateGlyphs} ${stateLabel}`}
         </span>
-        <span>{`Blinds ${Math.round(tilt * 100)}% closed · U ${motorCommand.toFixed(2)} · LDR ${lightIntensity}/1023`}</span>
+        <div className="readout-grid">
+          <div className="readout-item">
+            <span className="readout-k">Blinds</span>
+            <span className="readout-v">{Math.round(tilt * 100)}% closed</span>
+          </div>
+          <div className="readout-item">
+            <span className="readout-k">Motor</span>
+            <span className="readout-v">U {motorCommand.toFixed(2)}</span>
+          </div>
+          <div className="readout-item">
+            <span className="readout-k">Sensor</span>
+            <span className="readout-v">LDR {lightIntensity}/1023</span>
+          </div>
+        </div>
       </figcaption>
     </figure>
   )
