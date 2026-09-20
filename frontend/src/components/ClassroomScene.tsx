@@ -183,7 +183,9 @@ export default function ClassroomScene({
   // No-sun baseline runs DARK on purpose: deep dim ends give the
   // screen-blended sunlight real contrast to pop against. Bright ends stay
   // warm so a sunlit room still glows; secondary to the geometric bands.
-  const glassFill = mixHex('#0e161d', '#fff3c4', sunLevel)
+  // Sky kept BLUE-GREY even at low sun (overcast day, not night).
+  const skyFill = mixHex('#6c8496', '#c2e5ff', sunLevel)
+  const glassFill = mixHex('#1a2a36', '#fff3c4', sunLevel)
   const wallFill = mixHex('#121a1f', '#e8dcc0', 0.15 + 0.85 * admitted)
 
   // Slat layout: frozen Y centers, even spacing. Only extent + shading move.
@@ -237,10 +239,14 @@ export default function ClassroomScene({
         <line x1="610" y1="34" x2="619" y2="38" stroke="#1c2b30" strokeWidth="3" />
 
         {/* ===== HERO: window with venetian blinds ===== */}
-        {/* sky glass behind the slats */}
-        <rect x={WIN.x} y={WIN.y} width={WIN.w} height={WIN.h} fill={glassFill} className="px" />
-        {/* sun disc inside the window (stays put — blinds change transmission, not the sun) */}
-        <g opacity={0.1 + 0.9 * sunLevel}>
+        {/* sky behind the glass: blue-grey even when dim (overcast day, not
+            night). Glass sits on top as a warm tint, so slats stay legible. */}
+        <rect x={WIN.x} y={WIN.y} width={WIN.w} height={WIN.h} fill={skyFill} className="px" />
+        {/* sky glass tint over the sky */}
+        <rect x={WIN.x} y={WIN.y} width={WIN.w} height={WIN.h} fill={glassFill} opacity={0.45} className="px" />
+        {/* sun disc inside the window: faint but never gone — "where's the
+            light coming from" stays readable even on an overcast day. */}
+        <g opacity={0.06 + 0.52 * sunLevel}>
           <circle cx={sunCx} cy={WIN.y + 44} r="22" fill="#ffcf4d" />
           {Array.from({ length: 6 }, (_, i) => {
             const angle = (i * Math.PI) / 3 + 0.3
@@ -258,8 +264,9 @@ export default function ClassroomScene({
             )
           })}
         </g>
-        {/* glare halo around the sun: grows with intensity, independent of blinds */}
-        <circle cx={sunCx} cy={WIN.y + 44} r="70" fill="url(#sunGlow)" opacity={0.75 * sunLevel} />
+        {/* glare halo around the sun: grows with intensity, independent of
+            blinds — also faint at low sun, but never zero. */}
+        <circle cx={sunCx} cy={WIN.y + 44} r="70" fill="url(#sunGlow)" opacity={0.12 + 0.52 * sunLevel} />
         {/* trend glyph: makes the ΔL input VISIBLE — rising ▲ / falling ▼ /
             stable (hidden). Opacity follows magnitude; matches Stable's ±15
             flat top so glyph and fuzzy input never disagree. */}
