@@ -210,7 +210,7 @@ Use GitHub Projects or this table (copy into a `TRACKING.md` or Project board). 
 | P2-2 | 2 | `rules.py` + `inference.py` + centroid | jacy-sangre (both review — Q&A coverage) | `backend/fuzzy/` | done |
 | P2-3 | 2 | Flask `/api/fuzzy/evaluate` + CORS | jacy-sangre | `app.py` | done|
 | P3-1 | 3 | Vite+TS scaffold + `types.ts` + `api.ts` | jacy-sangre | `frontend/src/` | done |
-| P4-1 | 4 | SVG classroom scene + blinds animation | yerdnarthc | `ClassroomScene.tsx` | in-progress |
+| P4-1 | 4 | SVG classroom scene + blinds animation | yerdnarthc | `ClassroomScene.tsx` | done |
 | P5-1 | 5 | Fuzzy panel (memberships + rules + output) | — (claim) | `FuzzyPanel.tsx` | todo |
 | P6-1 | 6 | MF charts + 3D control surface | — (claim) | `MembershipChart`, `ControlSurface` | todo |
 | P7-1 | 7 | Preset scenarios + edge-case tests | Both (pair) | `TestingPanel`, `tests/` | todo |
@@ -321,4 +321,4 @@ No Next.js, Node backend, DB, auth, Docker, MQTT/ESP32, weather API, ML/CV, mobi
 
 ---
 
-*Phases 0–3 complete: P0-1 repo hygiene, P1-1 frozen `config.py` + rule matrix + `docs/figures/mf-*.png`, P2-1 `membership.py` + tests, P2-2 `rules.py` / `inference.py` / centroid, P2-3 `POST /api/fuzzy/evaluate`, P3-1 frontend shell (`types.ts` / `api.ts` / sliders → live JSON). Next: P4-1 SVG classroom scene — branch fresh from updated `main` and claim it in §5.4.*
+*Phases 0–4 complete: P0-1 repo hygiene, P1-1 frozen `config.py` + rule matrix + `docs/figures/mf-*.png`, P2-1 `membership.py` + tests, P2-2 `rules.py` / `inference.py` / centroid, P2-3 `POST /api/fuzzy/evaluate`, P3-1 frontend shell (`types.ts` / `api.ts` / sliders → live JSON), P4-1 SVG classroom scene + integrated blinds + directional lighting (tilt plant, WebGL, auto ΔL). Next: P5-1 Fuzzy panel — branch fresh from updated `main` and claim it in §5.4.*
