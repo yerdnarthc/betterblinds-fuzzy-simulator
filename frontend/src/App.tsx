@@ -32,8 +32,16 @@ function App() {
         <div id="scene-placeholder">Classroom scene lands in Phase 4</div>
         <div id="fuzzy-panel-placeholder">
           <h2>Fuzzy Panel (Phase 5 will style this)</h2>
-          {error && <p className="error">{error}</p>}
-          <pre>{result ? JSON.stringify(result, null, 2) : 'Loading...'}</pre>
+          {error && (
+            <p className="error" role="alert">
+              {error}
+              <br />
+              <small>
+                Tip: you need two terminals — backend on :5000 and frontend on :5173. See README Quickstart.
+              </small>
+            </p>
+          )}
+          <pre>{result ? JSON.stringify(result, null, 2) : error ? '—' : 'Loading...'}</pre>
         </div>
       </section>
 
