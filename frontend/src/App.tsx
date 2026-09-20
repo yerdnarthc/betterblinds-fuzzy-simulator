@@ -144,6 +144,7 @@ function App() {
             debugRays={debugRays}
             clockHour={clockHour}
             clockMinute={clockMinute}
+            activePreset={activePreset}
           />
           <TestingPanel activePreset={activePreset} onPreset={applyPreset} />
         </div>

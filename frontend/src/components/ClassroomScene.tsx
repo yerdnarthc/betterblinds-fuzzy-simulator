@@ -28,6 +28,7 @@ interface ClassroomSceneProps {
   debugRays: boolean // dev overlay: apertures, rays, floor hits (presentation hides it)
   clockHour: number // 0..23 scenario clock (presets drive this, not wall time)
   clockMinute: number // 0..59
+  activePreset: string | null // drives hue: Dawn/Morning/Noon/Cloudy/Sunset tints
 }
 
 // --- tiny math helpers (kept here so the drawing code reads plainly) ---
@@ -42,6 +43,121 @@ function mixHex(dim: string, bright: string, t: number): string {
   const b = [1, 3, 5].map((i) => parseInt(bright.slice(i, i + 2), 16))
   const mixed = d.map((dv, i) => Math.round(dv + (b[i] - dv) * clamp(t, 0, 1)))
   return `#${mixed.map((v) => v.toString(16).padStart(2, '0')).join('')}`
+}
+
+// Per-preset light hue: Dawn cooler, Morning warm yellow-orange, Noon
+// whiteish intense, Cloudy sky-blueish, Sunset deep orange-red. Manual
+// (null) falls back to the neutral warm palette so slider drags don't
+// suddenly tint.
+function presetPalette(preset: string | null): {
+  skyDim: string
+  skyBright: string
+  glassDim: string
+  glassBright: string
+  sunFill: string
+  sunHaloDim: string
+  sunHaloBright: string
+  wallBright: string
+  shaderSun: [number, number, number]
+} {
+  switch (preset) {
+    case 'dawn':
+      return {
+        skyDim: '#2e4a62',
+        skyBright: '#8ec0e8',
+        glassDim: '#1a2e40',
+        glassBright: '#b8d8f0',
+        sunFill: '#ffd8a0',
+        sunHaloDim: '#d8e8f8',
+        sunHaloBright: '#ffe8c0',
+        wallBright: '#c8d8e8',
+        shaderSun: [1.0, 0.86, 0.72],
+      }
+    case 'morning':
+      return {
+        skyDim: '#3c5568',
+        skyBright: '#9bc7e8',
+        glassDim: '#1a2a36',
+        glassBright: '#fff3c4',
+        sunFill: '#ffcf4d',
+        sunHaloDim: '#ffe8a0',
+        sunHaloBright: '#fff6d8',
+        wallBright: '#e8dcc0',
+        shaderSun: [1.0, 0.84, 0.42],
+      }
+    case 'noon':
+      return {
+        skyDim: '#4a6f96',
+        skyBright: '#c8e8ff',
+        glassDim: '#2a4260',
+        glassBright: '#fff8d8',
+        sunFill: '#fff3a0',
+        sunHaloDim: '#fff6c0',
+        sunHaloBright: '#fff8e0',
+        wallBright: '#fff3c4',
+        shaderSun: [1.0, 0.94, 0.68],
+      }
+    case 'cloudy':
+      return {
+        skyDim: '#3e5a74',
+        skyBright: '#8ab4d8',
+        glassDim: '#1e3a50',
+        glassBright: '#c8e0f0',
+        sunFill: '#cce6ff',
+        sunHaloDim: '#b8d8f8',
+        sunHaloBright: '#d8ecff',
+        wallBright: '#c8d8e8',
+        shaderSun: [0.78, 0.88, 0.98],
+      }
+    case 'sunset':
+      return {
+        skyDim: '#4a2a1a',
+        skyBright: '#ff9a5c',
+        glassDim: '#3a2010',
+        glassBright: '#ff8c42',
+        sunFill: '#ff6b35',
+        sunHaloDim: '#ff9a5c',
+        sunHaloBright: '#ff6b35',
+        wallBright: '#e8a080',
+        shaderSun: [1.0, 0.52, 0.28],
+      }
+    case 'sudden':
+      return {
+        skyDim: '#4a6f96',
+        skyBright: '#c8e8ff',
+        glassDim: '#2a4260',
+        glassBright: '#fff8d8',
+        sunFill: '#fff3a0',
+        sunHaloDim: '#fff6c0',
+        sunHaloBright: '#fff8e0',
+        wallBright: '#fff3c4',
+        shaderSun: [1.0, 0.94, 0.68],
+      }
+    case 'darkening':
+      return {
+        skyDim: '#2e4a62',
+        skyBright: '#7aa8c8',
+        glassDim: '#162a3a',
+        glassBright: '#a8c8e0',
+        sunFill: '#a0c4e8',
+        sunHaloDim: '#8ab4d8',
+        sunHaloBright: '#b8d8f8',
+        wallBright: '#a8c0d0',
+        shaderSun: [0.62, 0.74, 0.88],
+      }
+    default:
+      return {
+        skyDim: '#3c5568',
+        skyBright: '#9bc7e8',
+        glassDim: '#1a2a36',
+        glassBright: '#fff3c4',
+        sunFill: '#ffcf4d',
+        sunHaloDim: '#fff6d8',
+        sunHaloBright: '#fff6d8',
+        wallBright: '#e8dcc0',
+        shaderSun: [1.0, 0.92, 0.69],
+      }
+  }
 }
 
 // --- motion language: the 7 states a viewer must identify at a glance ---
@@ -159,6 +275,7 @@ export default function ClassroomScene({
   debugRays = false,
   clockHour = 9,
   clockMinute = 0,
+  activePreset = null,
 }: ClassroomSceneProps) {
   // Persistent plant state: survives renders, integrates per frame.
   const tilt = useIntegratedTilt(motorCommand)
@@ -167,6 +284,7 @@ export default function ClassroomScene({
   // visual use below (glass, sun, bands, halo, ambient, shader uniform)
   // follows this; exact readings (LDR text, aria) keep the raw slider value.
   const sunLevel = useGlide(clamp(lightIntensity / 1023, 0, 1))
+  const palette = presetPalette(activePreset)
   // Front projection of the shared tilt about the long horizontal axis:
   // open = edge-on thin slivers, closed = face-on overlap. Y centers frozen.
   const slatPhi = tiltOf(tilt)
@@ -188,9 +306,9 @@ export default function ClassroomScene({
   // screen-blended sunlight real contrast to pop against. Bright ends stay
   // warm so a sunlit room still glows; secondary to the geometric bands.
   // Sky kept BLUE-GREY even at low sun (overcast day, not night).
-  const skyFill = mixHex('#6c8496', '#c2e5ff', sunLevel)
-  const glassFill = mixHex('#1a2a36', '#fff3c4', sunLevel)
-  const wallFill = mixHex('#121a1f', '#e8dcc0', 0.15 + 0.85 * admitted)
+  const skyFill = mixHex(palette.skyDim, palette.skyBright, sunLevel)
+  const glassFill = mixHex(palette.glassDim, palette.glassBright, sunLevel)
+  const wallFill = mixHex('#121a1f', palette.wallBright, 0.15 + 0.85 * admitted)
 
   // Slat layout: frozen Y centers, even spacing. Only extent + shading move.
   const slatGap = WIN.h / SLAT_COUNT
@@ -263,7 +381,7 @@ export default function ClassroomScene({
         {/* sun disc inside the window: faint but never gone — "where's the
             light coming from" stays readable even on an overcast day. */}
         <g opacity={0.06 + 0.52 * sunLevel}>
-          <circle cx={sunCx} cy={WIN.y + 44} r="22" fill="#ffcf4d" />
+          <circle cx={sunCx} cy={WIN.y + 44} r="22" fill={palette.sunFill} />
           {Array.from({ length: 6 }, (_, i) => {
             const angle = (i * Math.PI) / 3 + 0.3
             return (
@@ -273,7 +391,7 @@ export default function ClassroomScene({
                 y1={WIN.y + 44 + Math.sin(angle) * 28}
                 x2={sunCx + Math.cos(angle) * 38}
                 y2={WIN.y + 44 + Math.sin(angle) * 38}
-                stroke="#ffcf4d"
+                stroke={palette.sunFill}
                 strokeWidth="4"
                 strokeLinecap="round"
               />
@@ -431,16 +549,19 @@ export default function ClassroomScene({
             per-pixel occlusion, penumbra, and falloff in-shader. The SVG
             keeps only the sun glare that belongs to the SOURCE itself. */}
         <defs>
-          {/* sun halo: glare that grows with intensity, not with blinds */}
+          {/* sun halo: glare that grows with intensity, tinted per preset so
+              Dawn stays cool, Noon stays white-hot, Sunset burns orange. */}
           <radialGradient id="sunGlow" gradientUnits="userSpaceOnUse" cx={sunCx} cy={WIN.y + 44} r="70">
-            <stop offset="0" stopColor="#fff6d8" stopOpacity="0.9" />
-            <stop offset="1" stopColor="#fff6d8" stopOpacity="0" />
+            <stop offset="0" stopColor={palette.sunHaloBright} stopOpacity="0.9" />
+            <stop offset="1" stopColor={palette.sunHaloDim} stopOpacity="0" />
           </radialGradient>
           {/* window clip: the sun wash below never leaves the glass area */}
           <clipPath id="winClip">
             <rect x={WIN.x} y={WIN.y} width={WIN.w} height={WIN.h} />
           </clipPath>
-          {/* wash gradient runs ALONG the shared sun vector (steers with angle) */}
+          {/* wash gradient runs ALONG the shared sun vector (steers with angle).
+              Tinted per preset so Morning glows warm, Cloudy stays cool,
+              Sunset burns — same vector, different palette. */}
           <linearGradient
             id="sunWash"
             gradientUnits="userSpaceOnUse"
@@ -449,8 +570,8 @@ export default function ClassroomScene({
             x2={WIN.x + sunDir.x * 320}
             y2={WIN.y + sunDir.y * 320}
           >
-            <stop offset="0" stopColor="#fff3c4" stopOpacity="0.95" />
-            <stop offset="1" stopColor="#ffedb0" stopOpacity="0" />
+            <stop offset="0" stopColor={palette.sunHaloBright} stopOpacity="0.95" />
+            <stop offset="1" stopColor={palette.sunHaloDim} stopOpacity="0" />
           </linearGradient>
         </defs>
 
@@ -553,12 +674,16 @@ export default function ClassroomScene({
           <text x={WIN.x + 40} y={WIN.y - 26} className="px-text scene-tag">MOTOR</text>
         </g>
       </svg>
-      {/* GPU light: same tilt/sun/level the SVG just drew with (§23). */}
+      {/* GPU light: same tilt/sun/level the SVG just drew with (§23).
+          Shader tint follows the same palette so floor bands glow with the
+          same hue as the window (warm morning, white noon, blue cloudy,
+          orange sunset). */}
       <LightingLayer
         tilt={tilt}
         sunAngleDeg={sunAngle}
         sunLevel={sunLevel}
         ambient={admitted}
+        sunColor={palette.shaderSun}
       />
       </div>
 
