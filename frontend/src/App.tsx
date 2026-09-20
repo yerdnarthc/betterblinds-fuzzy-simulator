@@ -48,6 +48,7 @@ function App() {
   // rays pointing downward. Debug overlay is dev-only, hidden for demos.
   const [sunAngle, setSunAngle] = useState(25)
   const [debugRays, setDebugRays] = useState(false)
+  const [activePreset, setActivePreset] = useState<string | null>(null)
   const [result, setResult] = useState<FuzzyEvaluateResponse | null>(null)
   const [error, setError] = useState<string | null>(null)
 
@@ -69,6 +70,28 @@ function App() {
 
   // Effective ΔL: measured by default, hand-asserted on override.
   const lightChange = autoDeltaOn ? Math.round(autoDelta) : manualDelta
+
+  // Preset scenarios — each is a distinct light/sun environment the blinds
+  // must react to. Values chosen to hit different MF regions and rule rows
+  // (Dark→VeryBright × Falling→Rising) so every demo tells a different story.
+  const applyPreset = (preset: 'morning' | 'noon' | 'cloudy' | 'sudden' | 'reset') => {
+    const table: Record<string, { light: number; sun: number; delta: number }> = {
+      morning: { light: 380, sun: 32, delta: 0 },
+      noon: { light: 850, sun: 8, delta: 0 },
+      cloudy: { light: 280, sun: 28, delta: 0 },
+      sudden: { light: 960, sun: 18, delta: 120 },
+      reset: { light: 500, sun: 25, delta: 0 },
+    }
+    const { light, sun, delta } = table[preset]
+    setActivePreset(preset)
+    setLightIntensity(light)
+    setSunAngle(sun)
+    // Keep both stores in sync so the switch between Auto/Manual later
+    // doesn't reveal a stale value from the other mode.
+    setManualDelta(delta)
+    setAutoDelta(delta)
+    lastLight.current = light
+  }
 
   // This effect ONLY refreshes the motor command (blinds live in the scene
   // as persistent tilt state). Changing inputs updates velocity, never a
@@ -105,6 +128,48 @@ function App() {
             sunAngle={sunAngle}
             debugRays={debugRays}
           />
+          <div className="preset-bar" role="group" aria-label="Preset scenarios">
+            <button
+              type="button"
+              className={`preset-btn ${activePreset === 'morning' ? 'is-active' : ''}`}
+              aria-pressed={activePreset === 'morning'}
+              onClick={() => applyPreset('morning')}
+            >
+              Morning
+            </button>
+            <button
+              type="button"
+              className={`preset-btn ${activePreset === 'noon' ? 'is-active' : ''}`}
+              aria-pressed={activePreset === 'noon'}
+              onClick={() => applyPreset('noon')}
+            >
+              Noon
+            </button>
+            <button
+              type="button"
+              className={`preset-btn ${activePreset === 'cloudy' ? 'is-active' : ''}`}
+              aria-pressed={activePreset === 'cloudy'}
+              onClick={() => applyPreset('cloudy')}
+            >
+              Cloudy
+            </button>
+            <button
+              type="button"
+              className={`preset-btn preset-btn--accent ${activePreset === 'sudden' ? 'is-active' : ''}`}
+              aria-pressed={activePreset === 'sudden'}
+              onClick={() => applyPreset('sudden')}
+            >
+              Sudden Brightening
+            </button>
+            <button
+              type="button"
+              className={`preset-btn preset-btn--ghost ${activePreset === 'reset' ? 'is-active' : ''}`}
+              aria-pressed={activePreset === 'reset'}
+              onClick={() => applyPreset('reset')}
+            >
+              Reset
+            </button>
+          </div>
         </div>
         <FuzzyPanel result={result} error={error} />
       </section>
@@ -117,7 +182,10 @@ function App() {
             min={0}
             max={1023}
             value={lightIntensity}
-            onChange={(e) => setLightIntensity(Number(e.target.value))}
+            onChange={(e) => {
+              setActivePreset(null)
+              setLightIntensity(Number(e.target.value))
+            }}
           />
         </label>
         <label className="debug-toggle">
@@ -138,7 +206,10 @@ function App() {
             value={manualDelta}
             disabled={autoDeltaOn}
             title={autoDeltaOn ? 'Measured automatically — uncheck Auto ΔL to drive it by hand' : undefined}
-            onChange={(e) => setManualDelta(Number(e.target.value))}
+            onChange={(e) => {
+              setActivePreset(null)
+              setManualDelta(Number(e.target.value))
+            }}
           />
         </label>
         <label>
@@ -148,7 +219,10 @@ function App() {
             min={5}
             max={55}
             value={sunAngle}
-            onChange={(e) => setSunAngle(Number(e.target.value))}
+            onChange={(e) => {
+              setActivePreset(null)
+              setSunAngle(Number(e.target.value))
+            }}
           />
         </label>
         <label className="debug-toggle">
