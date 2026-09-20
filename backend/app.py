@@ -10,8 +10,9 @@ from flask_cors import CORS
 from fuzzy import config
 from fuzzy.defuzzification import centroid
 from fuzzy.inference import aggregate
-from fuzzy.membership import fuzzify_delta, fuzzify_light
+from fuzzy.membership import evaluate_mf, fuzzify_delta, fuzzify_light
 from fuzzy.rules import active_rules
+from fuzzy.surface import compute_surface, linspace
 
 # Normalized actuator signal. The centroid itself lives in MOTOR_RANGE
 # (-100..100, signed percent effort), but the HTTP contract exposes it in
@@ -35,6 +36,8 @@ def index():
             "service": "betterblinds-fuzzy-simulator backend",
             "health": "/api/health",
             "evaluate": "/api/fuzzy/evaluate",
+            "surface": "/api/fuzzy/surface",
+            "membershipCurves": "/api/fuzzy/membership-curves",
         }
     )
 
@@ -48,6 +51,17 @@ def health():
 def _clamp(value, domain):
     lo, hi = domain
     return max(lo, min(hi, value))
+
+
+def _clamp_int(value, default, lo, hi):
+    """Parse a query-string int, falling back to `default` on anything bad,
+    then clamp to [lo, hi] -- keeps /surface and /membership-curves from
+    being asked to compute an unreasonably large grid."""
+    try:
+        n = int(value) if value is not None else default
+    except (TypeError, ValueError):
+        n = default
+    return max(lo, min(hi, n))
 
 
 def _lower_first(name):
@@ -105,6 +119,52 @@ def evaluate():
             ],
             "motorCommand": motor_command,
             "direction": _direction(motor_command),
+        }
+    )
+
+
+@app.get("/api/fuzzy/surface")
+def surface():
+    """Phase 6's 3D control surface: a grid sweep of L x ΔL -> motorCommand,
+    reusing the exact /api/fuzzy/evaluate pipeline (see fuzzy/surface.py) --
+    no separate math. Optional ?lightSteps=&deltaSteps= (default 61x41,
+    clamped) trade resolution for response time.
+    """
+    light_steps = _clamp_int(request.args.get("lightSteps"), default=61, lo=5, hi=121)
+    delta_steps = _clamp_int(request.args.get("deltaSteps"), default=41, lo=5, hi=121)
+    light_axis, delta_axis, grid = compute_surface(light_steps, delta_steps)
+    return jsonify({"light": light_axis, "delta": delta_axis, "motorCommand": grid})
+
+
+@app.get("/api/fuzzy/membership-curves")
+def membership_curves():
+    """Phase 6's 2D MF plots: each linguistic set's membership degree sampled
+    across its domain. Pure function of config.py -- no fuzzy evaluation,
+    just membership.evaluate_mf() walked across the axis. Optional ?steps=
+    (default 121, clamped) controls curve smoothness.
+    """
+    steps = _clamp_int(request.args.get("steps"), default=121, lo=10, hi=501)
+    light_axis = linspace(*config.LIGHT_RANGE, steps)
+    delta_axis = linspace(*config.DELTA_LIGHT_RANGE, steps)
+
+    return jsonify(
+        {
+            "light": {
+                "domain": list(config.LIGHT_RANGE),
+                "x": light_axis,
+                "sets": {
+                    name: [round(evaluate_mf(x, mf), 4) for x in light_axis]
+                    for name, mf in config.LIGHT_MFS.items()
+                },
+            },
+            "delta": {
+                "domain": list(config.DELTA_LIGHT_RANGE),
+                "x": delta_axis,
+                "sets": {
+                    name: [round(evaluate_mf(x, mf), 4) for x in delta_axis]
+                    for name, mf in config.DELTA_LIGHT_MFS.items()
+                },
+            },
         }
     )
 
