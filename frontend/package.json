@@ -26,5 +26,8 @@
     "oxlint": "^1.81.0",
     "typescript": "~6.0.2",
     "vite": "^8.3.0"
+  },
+  "allowScripts": {
+    "es5-ext@0.10.64": true
   }
 }
