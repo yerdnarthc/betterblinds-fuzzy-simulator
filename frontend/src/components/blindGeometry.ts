@@ -54,7 +54,7 @@ export const TILT_DEADBAND = 0.05
 // seconds for their ~75° of travel, so 6s: at typical fast-close u≈0.68 a
 // half sweep takes ~4.4s (deliberate, physical), while slow commands
 // (|u|≈0.2) visibly creep — magnitude IS speed, the core of the model.
-export const FULL_SWEEP_S = 6.0
+export const FULL_SWEEP_S = 7.5
 
 // Largest dt the integrator believes: tab-switch gaps don't teleport blinds.
 export const MAX_DT_S = 0.1
