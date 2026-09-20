@@ -67,6 +67,9 @@ uniform float uGlow;     // bloom strength (tuned const, not a slider)
 // openness is the key: penumbra cannot outlive the aperture feeding it, so
 // a hairline seal reads sealed instead of leaking a soft glow everywhere.
 // Returns 1 (blocked) when the row is sealed shut.
+//
+// Penumbra is deliberately WIDE (±5): sunrays cast soft, airy edges rather
+// than hard theatrical stripes. Aperture-scaling keeps sealed rows sealed.
 float slatCover(float y) {
   float firstCenter = uWinRect.y + uSlatGap * 0.5;
   float rel = (y - firstCenter) / uSlatGap;
@@ -75,9 +78,9 @@ float slatCover(float y) {
   if (nearest < 0.0 || nearest > uSlatCount - 1.0) return 0.0;
   float center = firstCenter + nearest * uSlatGap;
   float d = abs(y - center);
-  float edge = 1.0 - smoothstep(uSlatHalfH - 2.5, uSlatHalfH + 2.5, d);
+  float edge = 1.0 - smoothstep(uSlatHalfH - 5.0, uSlatHalfH + 5.0, d);
   float aperture = uSlatGap - 2.0 * uSlatHalfH;
-  float openness = clamp(aperture / 5.0, 0.0, 1.0);
+  float openness = clamp(aperture / 10.0, 0.0, 1.0);
   return 1.0 - (1.0 - edge) * openness;
 }
 
