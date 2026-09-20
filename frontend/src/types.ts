@@ -29,6 +29,9 @@ export type MotorDirection = 'open' | 'stop' | 'close'
 export interface FuzzyEvaluateResponse {
   memberships: FuzzyMemberships
   rules: FuzzyRule[]
+  // Normalized actuator velocity in [-1, 1]: negative = opening,
+  // 0 = stop (|u| <= 0.05 deadband), positive = closing. The scene
+  // integrates this per frame — it is a persistent signal, not a target.
   motorCommand: number
   direction: MotorDirection
 }

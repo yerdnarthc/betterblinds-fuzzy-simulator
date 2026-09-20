@@ -45,7 +45,7 @@ aggregate()                             -- inference.py
 centroid()                              -- defuzzification.py
         |  weighted average of the aggregated shape
         v
-motorCommand (crisp number, -100..+100), direction ("open"/"stop"/"close")
+motorCommand (normalized velocity in [-1, 1]: negative = opening, 0 = stop, positive = closing), direction ("open"/"stop"/"close")
 ```
 
 ### Worked example (verified against the live API)
@@ -61,12 +61,12 @@ motorCommand (crisp number, -100..+100), direction ("open"/"stop"/"close")
     {"id": "R11", "light": "VeryBright", "change": "Stable", "output": "FastClose", "activation": 0.08},
     {"id": "R12", "light": "VeryBright", "change": "Rising", "output": "FastClose", "activation": 0.3529}
   ],
-  "motorCommand": 67.9,
+  "motorCommand": 0.679,
   "direction": "close"
 }
 ```
 
-**How to explain this in Q&A:** L=742 sits on the falling edge of `Bright` (0.271) and the rising edge of `VeryBright` (0.353) — it's genuinely between the two, which is the entire point of fuzzy sets. ΔL=+38 is mostly `Rising` (0.92) with a sliver of `Stable` (0.08). Four rules fire because two light sets × two delta sets are simultaneously nonzero (2×2=4 nonzero combinations out of 12 total rules). Three of those four rules point to `FastClose`; Mamdani aggregation takes the *strongest* of them (max), so `FastClose`'s effective activation is 0.3529 (not the sum — fuzzy aggregation doesn't double-count). `SlowClose` only got 0.08. The centroid pulls the final number toward `FastClose`'s peak (100) but not all the way, because `SlowClose`'s small contribution still tugs the weighted average down a bit — hence 67.9, not 100.
+**How to explain this in Q&A:** L=742 sits on the falling edge of `Bright` (0.271) and the rising edge of `VeryBright` (0.353) — it's genuinely between the two, which is the entire point of fuzzy sets. ΔL=+38 is mostly `Rising` (0.92) with a sliver of `Stable` (0.08). Four rules fire because two light sets × two delta sets are simultaneously nonzero (2×2=4 nonzero combinations out of 12 total rules). Three of those four rules point to `FastClose`; Mamdani aggregation takes the *strongest* of them (max), so `FastClose`'s effective activation is 0.3529 (not the sum — fuzzy aggregation doesn't double-count). `SlowClose` only got 0.08. The centroid pulls the final number toward `FastClose`'s peak (100) but not all the way, because `SlowClose`'s small contribution still tugs the weighted average down a bit — hence 67.9 internally, exposed as 0.679 after the /100 boundary normalization, not 1.0.
 
 ## 3. A real finding: the "Stop" zone is narrower than the plan's prose assumed
 
@@ -75,10 +75,10 @@ Test `test_t2b_moderate_to_bright_blend_ramps_smoothly` documents this. Running 
 | L | Moderate | Bright | motorCommand |
 |---|---|---|---|
 | 250 | 1.00 | 0.00 | **0.0** |
-| 300 | 0.82 | 0.18 | 10.8 |
-| 400 | 0.47 | 0.53 | 26.1 |
-| 450 | 0.30 | 0.70 | 33.3 |
-| 535 | 0.00 | 1.00 | 50.0 |
+| 300 | 0.82 | 0.18 | 0.108 |
+| 400 | 0.47 | 0.53 | 0.261 |
+| 450 | 0.30 | 0.70 | 0.333 |
+| 535 | 0.00 | 1.00 | 0.50 |
 
 The original plan's test case T2 (`L=450, ΔL=0 → "Stop / near 0"`) was written before any real numbers existed. In the actual frozen MFs, `Bright`'s triangle peaks at 535 with a wide base (250→819), so it already outweighs `Moderate` past L≈392 (the exact crossover point). By L=450, the system is 70% `Bright`/30% `Moderate`, and rule `Bright+Stable→SlowClose` starts pulling the output toward gentle closing well before the room feels subjectively "not moderate anymore."
 
@@ -90,7 +90,7 @@ The original plan's test case T2 (`L=450, ΔL=0 → "Stop / near 0"`) was writte
 10 passed in 0.07s
 ```
 
-Covers: T1 (low light opens), T2 + T2b (moderate/stable — see finding above), T3 (sudden brightening closes fast), T4 (darkening closes less than brightening — proves ΔL matters), T5/T6 (extremes don't crash), T7 (499 vs 500 boundary is smooth, unlike the old crisp controller), T8 (±5 jitter doesn't flicker), plus a full-domain sweep asserting output always stays within ±100.
+Covers: T1 (low light opens), T2 + T2b (moderate/stable — see finding above), T3 (sudden brightening closes fast), T4 (darkening closes less than brightening — proves ΔL matters), T5/T6 (extremes don't crash), T7 (499 vs 500 boundary is smooth, unlike the old crisp controller), T8 (±5 jitter doesn't flicker), plus a full-domain sweep asserting output always stays within [-1, 1].
 
 ## 5. How to run it yourself
 
@@ -116,4 +116,4 @@ Phases 4–8 are untouched: the actual SVG classroom scene, the styled fuzzy das
 
 - *"Why did R08 and R11 only contribute 0.08?"* — because `ΔL=38` has only 0.08 membership in `Stable` (it's mostly `Rising` at 0.92); a rule's activation is capped by its weakest antecedent (`min`).
 - *"Why isn't `motorCommand` just the average of the rule outputs?"* — because Mamdani aggregation is `max` per output category first (so multiple rules agreeing on `FastClose` don't stack), and centroid is a weighted average over the *shape*, not over the rule list.
-- *"What happens exactly at L=499 vs L=500?"* — a ~0.2-unit difference in `motorCommand` (see `test_t7`), because both values sit deep inside `Bright`'s smooth slope, nowhere near a hard edge. Contrast with the original hardware's crisp cutoff, which would have flipped `open`/`close` right there.
+- *"What happens exactly at L=499 vs L=500?"* — a ~0.002-unit difference in `motorCommand` (see `test_t7`), because both values sit deep inside `Bright`'s smooth slope, nowhere near a hard edge. Contrast with the original hardware's crisp cutoff, which would have flipped `open`/`close` right there.

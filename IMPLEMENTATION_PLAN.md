@@ -94,10 +94,16 @@ API contract (frozen — changing this requires both devs):
 {
   "memberships": { "dark": 0, "moderate": 0.21, "bright": 0.71, "veryBright": 0.24, "falling": 0, "stable": 0.18, "rising": 0.82 },
   "rules": [{ "id": "R08", "light": "Bright", "change": "Rising", "output": "FastClose", "activation": 0.71 }],
-  "motorCommand": 67,
+  "motorCommand": 0.67,
   "direction": "close"
 }
 ```
+
+`motorCommand` is a NORMALIZED actuator velocity in [-1, 1] (negative =
+opening, 0 = stop, positive = closing, |u| = speed). The fuzzy core still
+reasons in percent internally; only the wire format is normalized. The scene
+integrates it per frame until a limit — one evaluation commands persistent
+motion, not a one-shot nudge.
 
 ---
 
@@ -277,7 +283,7 @@ Daily 10-min sync: what merged, what's in-review, did the contract change?
 |---|---|---|---|---|
 | T1 | 100 | -20 | Open (U strongly negative) | Low light |
 | T2 | 450 | 0 | Stop / near 0 | Moderate-stable hold |
-| T3 | 850 | +100 | Fast close (U ≈ +80…100) | Sudden brightening |
+| T3 | 850 | +100 | Fast close (U ≈ +0.80…1.00) | Sudden brightening |
 | T4 | 850 | -100 | Slow close / reduced (U small +) | Bright but darkening — proves ΔL value |
 | T5 | 0 | -200 | Fast open, no crash | Lower extreme |
 | T6 | 1023 | +200 | Fast close, no crash | Upper extreme |
