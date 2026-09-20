@@ -3,6 +3,7 @@ import type { CSSProperties } from 'react'
 import { evaluateFuzzy } from './api'
 import ClassroomScene from './components/ClassroomScene'
 import FuzzyPanel from './components/FuzzyPanel'
+import TestingPanel from './components/TestingPanel'
 import type { FuzzyEvaluateResponse } from './types'
 
 // Plotly (with 3D/gl3d support for the control surface) is a multi-MB
@@ -49,6 +50,11 @@ function App() {
   const [sunAngle, setSunAngle] = useState(25)
   const [debugRays, setDebugRays] = useState(false)
   const [activePreset, setActivePreset] = useState<string | null>(null)
+  // Clock time tied to presets (B): the clock is a scenario clock, not wall
+  // time. Morning→8:00, Noon→12:00, Cloudy→10:30, Reset→9:00. Sudden
+  // Brightening keeps the clock still (light jump, not time travel).
+  const [clockHour, setClockHour] = useState(9)
+  const [clockMinute, setClockMinute] = useState(0)
   const [result, setResult] = useState<FuzzyEvaluateResponse | null>(null)
   const [error, setError] = useState<string | null>(null)
 
@@ -74,18 +80,27 @@ function App() {
   // Preset scenarios — each is a distinct light/sun environment the blinds
   // must react to. Values chosen to hit different MF regions and rule rows
   // (Dark→VeryBright × Falling→Rising) so every demo tells a different story.
-  const applyPreset = (preset: 'morning' | 'noon' | 'cloudy' | 'sudden' | 'reset') => {
-    const table: Record<string, { light: number; sun: number; delta: number }> = {
-      morning: { light: 380, sun: 32, delta: 0 },
-      noon: { light: 850, sun: 8, delta: 0 },
-      cloudy: { light: 280, sun: 28, delta: 0 },
-      sudden: { light: 960, sun: 18, delta: 120 },
-      reset: { light: 500, sun: 25, delta: 0 },
+  const applyPreset = (
+    preset: 'dawn' | 'morning' | 'noon' | 'cloudy' | 'sunset' | 'sudden' | 'darkening' | 'reset',
+  ) => {
+    const table: Record<string, { light: number; sun: number; delta: number; hour: number; minute: number }> = {
+      dawn: { light: 180, sun: 38, delta: 0, hour: 6, minute: 0 },
+      morning: { light: 380, sun: 32, delta: 0, hour: 8, minute: 0 },
+      noon: { light: 850, sun: 8, delta: 0, hour: 12, minute: 0 },
+      cloudy: { light: 280, sun: 28, delta: 0, hour: 10, minute: 30 },
+      sunset: { light: 320, sun: 35, delta: -8, hour: 18, minute: 0 },
+      sudden: { light: 960, sun: 18, delta: 120, hour: -1, minute: -1 },
+      darkening: { light: 200, sun: 28, delta: -120, hour: -1, minute: -1 },
+      reset: { light: 500, sun: 25, delta: 0, hour: 9, minute: 0 },
     }
-    const { light, sun, delta } = table[preset]
+    const { light, sun, delta, hour, minute } = table[preset]
     setActivePreset(preset)
     setLightIntensity(light)
     setSunAngle(sun)
+    if (hour >= 0) {
+      setClockHour(hour)
+      setClockMinute(minute)
+    }
     // Keep both stores in sync so the switch between Auto/Manual later
     // doesn't reveal a stale value from the other mode.
     setManualDelta(delta)
@@ -127,49 +142,10 @@ function App() {
             direction={result?.direction ?? 'stop'}
             sunAngle={sunAngle}
             debugRays={debugRays}
+            clockHour={clockHour}
+            clockMinute={clockMinute}
           />
-          <div className="preset-bar" role="group" aria-label="Preset scenarios">
-            <button
-              type="button"
-              className={`preset-btn ${activePreset === 'morning' ? 'is-active' : ''}`}
-              aria-pressed={activePreset === 'morning'}
-              onClick={() => applyPreset('morning')}
-            >
-              Morning
-            </button>
-            <button
-              type="button"
-              className={`preset-btn ${activePreset === 'noon' ? 'is-active' : ''}`}
-              aria-pressed={activePreset === 'noon'}
-              onClick={() => applyPreset('noon')}
-            >
-              Noon
-            </button>
-            <button
-              type="button"
-              className={`preset-btn ${activePreset === 'cloudy' ? 'is-active' : ''}`}
-              aria-pressed={activePreset === 'cloudy'}
-              onClick={() => applyPreset('cloudy')}
-            >
-              Cloudy
-            </button>
-            <button
-              type="button"
-              className={`preset-btn preset-btn--accent ${activePreset === 'sudden' ? 'is-active' : ''}`}
-              aria-pressed={activePreset === 'sudden'}
-              onClick={() => applyPreset('sudden')}
-            >
-              Sudden Brightening
-            </button>
-            <button
-              type="button"
-              className={`preset-btn preset-btn--ghost ${activePreset === 'reset' ? 'is-active' : ''}`}
-              aria-pressed={activePreset === 'reset'}
-              onClick={() => applyPreset('reset')}
-            >
-              Reset
-            </button>
-          </div>
+          <TestingPanel activePreset={activePreset} onPreset={applyPreset} />
         </div>
         <FuzzyPanel result={result} error={error} />
       </section>

@@ -26,6 +26,8 @@ interface ClassroomSceneProps {
   direction: MotorDirection // 'open' | 'stop' | 'close'
   sunAngle: number // degrees from vertical; + = sun upper-left, rays lean right
   debugRays: boolean // dev overlay: apertures, rays, floor hits (presentation hides it)
+  clockHour: number // 0..23 scenario clock (presets drive this, not wall time)
+  clockMinute: number // 0..59
 }
 
 // --- tiny math helpers (kept here so the drawing code reads plainly) ---
@@ -155,6 +157,8 @@ export default function ClassroomScene({
   direction,
   sunAngle = DEFAULT_SUN_ANGLE_DEG,
   debugRays = false,
+  clockHour = 9,
+  clockMinute = 0,
 }: ClassroomSceneProps) {
   // Persistent plant state: survives renders, integrates per frame.
   const tilt = useIntegratedTilt(motorCommand)
@@ -209,6 +213,18 @@ export default function ClassroomScene({
   // Chevron march speed follows the same level: 1 slow pulse .. 3 fast march.
   const chevronDuration = level === 1 ? '0.9s' : level === 2 ? '0.55s' : '0.32s'
 
+  // Scenario clock: preset-driven, not wall time. hour 0..23, minute 0..59.
+  // Hand angles: minute 6°/min, hour 30°/h + 0.5°/min. Rendered as lines
+  // from center (length 12 = minute, 9 = hour). 12 o'clock = -90° in SVG
+  // coords (0° = +x, clockwise is +y), so we offset by -90°.
+  const minuteAngle = clockMinute * 6 - 90
+  const hourAngle = (clockHour % 12) * 30 + clockMinute * 0.5 - 90
+  const toRad = (deg: number) => (deg * Math.PI) / 180
+  const cx = 610
+  const cy = 34
+  const minuteEnd = { x: cx + Math.cos(toRad(minuteAngle)) * 12, y: cy + Math.sin(toRad(minuteAngle)) * 12 }
+  const hourEnd = { x: cx + Math.cos(toRad(hourAngle)) * 9, y: cy + Math.sin(toRad(hourAngle)) * 9 }
+
   const summary =
     `Sun ${lightIntensity}/1023, blinds ${Math.round(tilt * 100)}% closed, ` +
     `motor ${stateLabel} (${motorCommand}).`
@@ -233,10 +249,10 @@ export default function ClassroomScene({
         <line x1="0" y1="356" x2="640" y2="356" stroke="#161d20" strokeWidth="2" />
         <line x1="0" y1="390" x2="640" y2="390" stroke="#161d20" strokeWidth="2" />
 
-        {/* wall clock */}
-        <circle cx="610" cy="34" r="20" fill="#e8e4da" stroke="#1c2b30" strokeWidth="4" className="px" />
-        <line x1="610" y1="34" x2="610" y2="22" stroke="#1c2b30" strokeWidth="3" />
-        <line x1="610" y1="34" x2="619" y2="38" stroke="#1c2b30" strokeWidth="3" />
+        {/* wall clock — scenario clock driven by presets (B) */}
+        <circle cx={cx} cy={cy} r="20" fill="#e8e4da" stroke="#1c2b30" strokeWidth="4" className="px" />
+        <line x1={cx} y1={cy} x2={hourEnd.x} y2={hourEnd.y} stroke="#1c2b30" strokeWidth="3" strokeLinecap="round" />
+        <line x1={cx} y1={cy} x2={minuteEnd.x} y2={minuteEnd.y} stroke="#1c2b30" strokeWidth="2.5" strokeLinecap="round" />
 
         {/* ===== HERO: window with venetian blinds ===== */}
         {/* sky behind the glass: blue-grey even when dim (overcast day, not

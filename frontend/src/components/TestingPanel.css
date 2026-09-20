@@ -1,0 +1,78 @@
+/* TestingPanel — isolated preset + cases surface for P7-1.
+   Reuses the site's chunky-rectangle tokens so it reads as part of the
+   scene chrome, not a foreign dashboard. No layout ownership over siblings:
+   App.tsx decides placement (below the scene, anchored without scrolling). */
+
+.testing-panel {
+  display: grid;
+  gap: 14px;
+}
+
+.testing-cases {
+  border: 3px solid #1c2b30;
+  border-radius: 6px;
+  background: var(--bg-elevated);
+  box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.35);
+  padding: 14px 14px 12px;
+}
+
+.testing-cases__title {
+  margin: 0 0 10px;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+
+.testing-cases__table-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+
+.testing-cases__table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.testing-cases__table th,
+.testing-cases__table td {
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+  white-space: nowrap;
+}
+
+.testing-cases__table th {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.testing-cases__table td.mono {
+  font-family: var(--mono);
+  font-size: 11px;
+}
+
+.testing-cases__pass {
+  font-weight: 700;
+  color: #7ee0b8;
+}
+
+.testing-cases__foot {
+  margin: 10px 0 0;
+  font-size: 11px;
+  color: var(--text-dim);
+  line-height: 1.5;
+}
+
+.testing-cases__foot code {
+  font-size: 11px;
+  padding: 2px 6px;
+}
