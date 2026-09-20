@@ -4,7 +4,8 @@
 // from simulation state (tilt / sun / intensity / window geometry).
 //
 // Model (§9-§11): for each room pixel OUTSIDE the window rect, march
-// backwards along -sunDir to the window plane. If the crossing lands on a
+// backwards along -sunDir to the WINDOW RECTANGLE (slab test — every window
+// column is an emitter, not just the right edge). If the crossing lands on a
 // slat face -> blocked; in a gap -> transmitted. Coverage uses smoothstep
 // (analytic penumbra, §14) over the SAME shared half-height every slat has,
 // so tilt changes reshape light continuously (§5, §21). Falloff with travel
@@ -74,8 +75,11 @@ float slatCover(float y) {
   float firstCenter = uWinRect.y + uSlatGap * 0.5;
   float rel = (y - firstCenter) / uSlatGap;
   float nearest = floor(rel + 0.5);
-  // Outside the slat stack vertically -> no slat to block with.
-  if (nearest < 0.0 || nearest > uSlatCount - 1.0) return 0.0;
+  // Edge rows govern the frame lines: a crossing exactly on the sill/top
+  // glass edge belongs to the nearest slat row (light under the bottom slat
+  // is controlled by it), so clamp instead of special-casing. Sealing still
+  // holds because the openness factor (below) zeroes sealed rows.
+  nearest = clamp(nearest, 0.0, uSlatCount - 1.0);
   float center = firstCenter + nearest * uSlatGap;
   float d = abs(y - center);
   float edge = 1.0 - smoothstep(uSlatHalfH - 5.0, uSlatHalfH + 5.0, d);
@@ -84,20 +88,25 @@ float slatCover(float y) {
   return 1.0 - (1.0 - edge) * openness;
 }
 
-// Direct light at one room point: march backwards along -sunDir to the
-// window plane; blocked by slats, else falloff with travel distance.
+// Direct light at one room point: march backwards along -sunDir and
+// intersect the WINDOW RECTANGLE (slab test), so every window column emits —
+// this is the full-width directional field, not a single-plane fan. Blocked
+// by slats at the crossing Y, else falloff with travel distance.
 // Returns 0 outside the window's light path (never negative, never NaN:
-// dir.x > 0 and dir.y > 0 by construction, so s and t stay finite).
+// the slab comparisons stay finite; a zero direction component yields
+// infinities that safely fail the enter<exit test).
 float directLight(vec2 p) {
-  float winPlaneX = uWinRect.x + uWinRect.z;
-  float s = (p.x - winPlaneX) / uSunDir.x;
-  if (!(s > 0.0)) return 0.0;
-  float crossY = p.y - uSunDir.y * s;
-  if (!(crossY > uWinRect.y) || !(crossY < uWinRect.y + uWinRect.w)) return 0.0;
-  float transmission = 1.0 - slatCover(crossY);
-  float travel = length(vec2(p.x - winPlaneX, p.y - crossY));
-  // Long reach: patches stay bright deep into the room (stylized, not photometric).
-  return transmission * exp(-travel / 1000.0);
+  vec2 b = -uSunDir;
+  vec2 t0 = (vec2(uWinRect.x, uWinRect.y) - p) / b;
+  vec2 t1 = (vec2(uWinRect.x + uWinRect.z, uWinRect.y + uWinRect.w) - p) / b;
+  vec2 tmin = min(t0, t1);
+  vec2 tmax = max(t0, t1);
+  float tenter = max(max(tmin.x, tmin.y), 0.0);
+  float texit = min(tmax.x, tmax.y);
+  if (!(tenter < texit)) return 0.0;
+  vec2 cross = p + b * tenter;
+  float transmission = 1.0 - slatCover(cross.y);
+  return transmission * exp(-tenter / 1000.0);
 }
 
 void main() {

@@ -193,9 +193,10 @@ export default function ClassroomScene({
   // (via LightingLayer uniforms) AND the SVG debug arrow below. The shader
   // owns all direct-light pixels; the SVG keeps only debug geometry.
   const sunDir = sunDirection(sunAngle)
-  const rowCenters = Array.from({ length: SLAT_COUNT }, (_, i) => WIN.y + slatGap * i + slatGap / 2)
-  // Sun disc drifts slightly with angle (same sky, viewed through glass).
-  const sunCx = clamp(WIN.x + 196 + (sunAngle - DEFAULT_SUN_ANGLE_DEG) * 1.5, WIN.x + 40, WIN.x + WIN.w - 40)
+  // Sun disc drifts slightly with angle around the window CENTER (same sky,
+  // viewed through glass). Centered travel so the decor stops testifying
+  // for a point source — direction comes from the shared vector, not the icon.
+  const sunCx = clamp(WIN.x + 125 + (sunAngle - DEFAULT_SUN_ANGLE_DEG) * 1.5, WIN.x + 40, WIN.x + WIN.w - 40)
 
   // Spoke follows the PHYSICAL drive: spins while integrating, speed from
   // command magnitude (|u| IS actuator speed), direction from command sign.
@@ -304,14 +305,16 @@ export default function ClassroomScene({
                 stroke="#8d8574"
                 strokeWidth="1.5"
               />
-              {/* upper-surface highlight: the visible face catching light */}
+              {/* upper-surface highlight: the visible face catching light.
+                  Scales with BOTH tilt-face and sun level — slats go dark
+                  at night instead of glowing on their own. */}
               <rect
                 x={WIN.x + 5}
                 y={top}
                 width={WIN.w - 10}
                 height={highlightH}
                 fill="#fff7e0"
-                opacity={0.2 + 0.5 * face}
+                opacity={(0.15 + 0.55 * face) * (0.3 + 0.7 * sunLevel)}
               />
             </g>
           )
@@ -341,6 +344,23 @@ export default function ClassroomScene({
           strokeWidth="3"
           className="px"
         />
+        {/* sun wash across the WHOLE slat stack: sunlight landing ON the
+            blinds, not just passing through. Clipped to glass, sheared along
+            the shared sun vector, and gated by live openness — as slats seal,
+            the wash dies with the gaps (same rowAperture the debug ticks and
+            shader occlusion derive from). */}
+        <g clipPath="url(#winClip)">
+          <rect
+            x={WIN.x - 120}
+            y={WIN.y - 40}
+            width={WIN.w + 240}
+            height={WIN.h + 80}
+            fill="url(#sunWash)"
+            opacity={
+              0.55 * sunLevel * clamp(rowAperture(slatH, slatGap) / 10, 0, 1)
+            }
+          />
+        </g>
         {/* chunky window frame on top of everything */}
         <rect
           x={WIN.x - 8}
@@ -393,28 +413,67 @@ export default function ClassroomScene({
             <stop offset="0" stopColor="#fff6d8" stopOpacity="0.9" />
             <stop offset="1" stopColor="#fff6d8" stopOpacity="0" />
           </radialGradient>
+          {/* window clip: the sun wash below never leaves the glass area */}
+          <clipPath id="winClip">
+            <rect x={WIN.x} y={WIN.y} width={WIN.w} height={WIN.h} />
+          </clipPath>
+          {/* wash gradient runs ALONG the shared sun vector (steers with angle) */}
+          <linearGradient
+            id="sunWash"
+            gradientUnits="userSpaceOnUse"
+            x1={WIN.x}
+            y1={WIN.y}
+            x2={WIN.x + sunDir.x * 320}
+            y2={WIN.y + sunDir.y * 320}
+          >
+            <stop offset="0" stopColor="#fff3c4" stopOpacity="0.95" />
+            <stop offset="1" stopColor="#ffedb0" stopOpacity="0" />
+          </linearGradient>
         </defs>
 
-        {/* ===== debug overlay (§39): apertures + shared sun vector ===== */}
-        {/* Hidden in presentation. Aperture ticks read the SAME slatH the
-            slats draw with; the arrow is the SAME sunDir the shader marches.
-            (Floor bands + rays moved into LightingLayer — no double-draw.) */}
+        {/* ===== debug overlay (§39/§41): full-window directional ray grid ===== */}
+        {/* Hidden in presentation. Origins sample the WHOLE aperture (not one
+            corner): shared sunDir, X marks where slats block. Row openness
+            comes from the SAME slatH the slats draw and the shader marches. */}
         {debugRays && (
           <g>
-            {rowCenters.map((cy, i) => {
-              const open = rowAperture(slatH, slatGap)
-              return (
-                <rect
-                  key={i}
-                  x={WIN.x + WIN.w - 3}
-                  y={cy - open / 2}
-                  width="6"
-                  height={Math.max(1, open)}
-                  fill={open > 0.5 ? '#7CFC98' : '#c0392b'}
-                  opacity="0.9"
-                />
-              )
-            })}
+            {[70, 120, 170, 220, 260].flatMap((ox) =>
+              [100, 150, 200, 250].map((oy) => {
+                const blocked = rowAperture(slatH, slatGap) < 3
+                const ex = ox + sunDir.x * 110
+                const ey = oy + sunDir.y * 110
+                return blocked ? (
+                  <g
+                    key={`${ox}-${oy}`}
+                    stroke="#c0392b"
+                    strokeWidth="3"
+                    strokeLinecap="round"
+                  >
+                    <line x1={ox - 5} y1={oy - 5} x2={ox + 5} y2={oy + 5} />
+                    <line x1={ox + 5} y1={oy - 5} x2={ox - 5} y2={oy + 5} />
+                    <line
+                      x1={ox}
+                      y1={oy}
+                      x2={ox + sunDir.x * 22}
+                      y2={oy + sunDir.y * 22}
+                      opacity="0.6"
+                    />
+                  </g>
+                ) : (
+                  <line
+                    key={`${ox}-${oy}`}
+                    x1={ox}
+                    y1={oy}
+                    x2={ex}
+                    y2={ey}
+                    stroke="#ffedb0"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    opacity="0.85"
+                  />
+                )
+              }),
+            )}
             <line
               x1={560}
               y1={40}
