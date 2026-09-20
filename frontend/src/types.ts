@@ -35,3 +35,25 @@ export interface FuzzyEvaluateResponse {
   motorCommand: number
   direction: MotorDirection
 }
+
+// Phase 6: GET /api/fuzzy/surface — a grid sweep of L x dL -> motorCommand
+// for the 3D control-surface plot. Same normalization as motorCommand above.
+export interface SurfaceResponse {
+  light: number[]
+  delta: number[]
+  // motorCommand[i][j] is the value at (light[i], delta[j]).
+  motorCommand: number[][]
+}
+
+// Phase 6: GET /api/fuzzy/membership-curves — each linguistic set's
+// membership degree sampled across its domain, for the 2D MF plots.
+export interface MembershipCurveGroup {
+  domain: [number, number]
+  x: number[]
+  sets: Record<string, number[]>
+}
+
+export interface MembershipCurvesResponse {
+  light: MembershipCurveGroup
+  delta: MembershipCurveGroup
+}
