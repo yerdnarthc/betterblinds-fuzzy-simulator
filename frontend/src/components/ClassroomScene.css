@@ -259,6 +259,11 @@
   outline-offset: 2px;
 }
 
+/* Auto-driven slider: dimmed + non-interactive while measured. */
+#controls input[type='range']:disabled {
+  cursor: not-allowed;
+}
+
 /* Debug toggle: inline checkbox row (not a grid like the sliders). */
 #controls .debug-toggle {
   display: flex;

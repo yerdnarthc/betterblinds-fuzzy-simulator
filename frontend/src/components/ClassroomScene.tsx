@@ -107,6 +107,43 @@ function useIntegratedTilt(command: number): number {
   return tilt
 }
 
+// Sun brightness glides toward its target (~0.8s) instead of teleporting:
+// jumping the Light slider reads as fast-moving cloudbreak, and it settles
+// exactly. Reduced-motion users get the jump-free truth instantly.
+function useGlide(target: number): number {
+  const [value, setValue] = useState(target)
+  const shown = useRef(target)
+  const [reduceMotion] = useState(
+    () =>
+      typeof window !== 'undefined' &&
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches,
+  )
+
+  useEffect(() => {
+    if (reduceMotion) {
+      shown.current = target
+      return
+    }
+    const from = shown.current
+    if (from === target) return
+    let frame = 0
+    const start = performance.now()
+    const duration = 800
+    const tick = (now: number) => {
+      const k = Math.min(1, (now - start) / duration)
+      const eased = k < 0.5 ? 4 * k * k * k : 1 - ((-2 * k + 2) ** 3) / 2
+      const v = from + (target - from) * eased
+      shown.current = v
+      setValue(v)
+      if (k < 1) frame = requestAnimationFrame(tick)
+    }
+    frame = requestAnimationFrame(tick)
+    return () => cancelAnimationFrame(frame)
+  }, [target, reduceMotion])
+
+  return reduceMotion ? target : value
+}
+
 // Window geometry, shared by glass / slats / frame so they always line up.
 const WIN = { x: 36, y: 56, w: 250, h: 250 }
 const SLAT_COUNT = 10
@@ -122,8 +159,10 @@ export default function ClassroomScene({
   // Persistent plant state: survives renders, integrates per frame.
   const tilt = useIntegratedTilt(motorCommand)
 
-  // How bright the sun looks: 0 (night) -> 1 (harsh noon).
-  const sunLevel = clamp(lightIntensity / 1023, 0, 1)
+  // How bright the sun looks: 0 (night) -> 1 (harsh noon). EASED — every
+  // visual use below (glass, sun, bands, halo, ambient, shader uniform)
+  // follows this; exact readings (LDR text, aria) keep the raw slider value.
+  const sunLevel = useGlide(clamp(lightIntensity / 1023, 0, 1))
   // Front projection of the shared tilt about the long horizontal axis:
   // open = edge-on thin slivers, closed = face-on overlap. Y centers frozen.
   const slatPhi = tiltOf(tilt)
@@ -220,6 +259,21 @@ export default function ClassroomScene({
         </g>
         {/* glare halo around the sun: grows with intensity, independent of blinds */}
         <circle cx={sunCx} cy={WIN.y + 44} r="70" fill="url(#sunGlow)" opacity={0.75 * sunLevel} />
+        {/* trend glyph: makes the ΔL input VISIBLE — rising ▲ / falling ▼ /
+            stable (hidden). Opacity follows magnitude; matches Stable's ±15
+            flat top so glyph and fuzzy input never disagree. */}
+        {Math.abs(lightChange) > 15 && (
+          <text
+            x={sunCx + 34}
+            y={WIN.y + 52}
+            className="px-text"
+            fontSize="20"
+            fill="#fec837"
+            opacity={clamp(Math.abs(lightChange) / 80, 0.3, 1)}
+          >
+            {lightChange > 0 ? '▲' : '▼'}
+          </text>
+        )}
         {/* venetian slats: one shared tilt, frozen Y centers, projected face.
             NO screen-plane rotation: in this front view the tilt axis IS the
             horizontal slat axis, so tilt shows as growing vertical extent +
