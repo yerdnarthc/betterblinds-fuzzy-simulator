@@ -50,8 +50,12 @@ Open the Vite URL, move the sliders — the scene, fuzzy panel, and motor should
 ```text
 POST /api/fuzzy/evaluate
 { "lightIntensity": 742, "lightChange": 38 }
-→ { "memberships": {...}, "rules": [...], "motorCommand": 67, "direction": "close" }
+→ { "memberships": {...}, "rules": [...], "motorCommand": 0.67, "direction": "close" }
 ```
+
+`motorCommand` is a normalized velocity in [-1, 1] (negative = opening,
+positive = closing, magnitude = speed). The scene integrates it every frame
+until a blind limit — holding the sliders still never freezes a live command.
 
 > Frozen contract — changes need both devs + sync `backend/fuzzy/config.py` with `frontend/src/types.ts`. See Implementation Plan §5.
 

@@ -1,7 +1,7 @@
 """Deterministic test cases from IMPLEMENTATION_PLAN.md §7 (T1-T8), plus
 a full-domain sweep. Each test drives the same pipeline app.py wires to
 HTTP: fuzzify -> rule activation (min) -> implication+aggregation (max) ->
-centroid.
+centroid, normalized to [-1, 1] exactly like the API response.
 """
 
 from fuzzy.inference import aggregate
@@ -11,14 +11,15 @@ from fuzzy.defuzzification import centroid
 
 
 def motor_command(light, delta):
+    """Same normalization as app.py: centroid percent / 100 -> [-1, 1]."""
     fired = active_rules(fuzzify_light(light), fuzzify_delta(delta))
     xs, ys, _peak_by_output = aggregate(fired)
-    return centroid(xs, ys)
+    return centroid(xs, ys) / 100
 
 
 def test_t1_low_light_opens():
     """L=100, dL=-20 -> strongly negative (opening)."""
-    assert motor_command(100, -20) < -10
+    assert motor_command(100, -20) < -0.1
 
 
 def test_t2_moderate_stable_at_exact_peak_holds():
@@ -28,7 +29,7 @@ def test_t2_moderate_stable_at_exact_peak_holds():
     See test_t2b + NOTES.md: move away from 250 and Bright's membership
     overtakes Moderate faster than the plan's original prose assumed.
     """
-    assert abs(motor_command(250, 0)) < 5
+    assert abs(motor_command(250, 0)) < 0.05
 
 
 def test_t2b_moderate_to_bright_blend_ramps_smoothly():
@@ -38,12 +39,12 @@ def test_t2b_moderate_to_bright_blend_ramps_smoothly():
     see NOTES.md for why and whether it's worth recalibrating with your pair.
     """
     u = motor_command(450, 0)
-    assert 15 < u < 45
+    assert 0.15 < u < 0.45
 
 
 def test_t3_sudden_brightening_closes_fast():
     """L=850, dL=+100 -> fast close."""
-    assert motor_command(850, 100) > 60
+    assert motor_command(850, 100) > 0.6
 
 
 def test_t4_bright_but_darkening_closes_less_than_brightening():
@@ -69,7 +70,7 @@ def test_t7_boundary_499_vs_500_is_smooth():
     """
     u_499 = motor_command(499, 0)
     u_500 = motor_command(500, 0)
-    assert abs(u_499 - u_500) < 2
+    assert abs(u_499 - u_500) < 0.02
 
 
 def test_t8_small_jitter_does_not_flicker():
@@ -78,11 +79,11 @@ def test_t8_small_jitter_does_not_flicker():
     """
     baseline = motor_command(600, 0)
     jittered = motor_command(600, 5)
-    assert abs(baseline - jittered) < 0.5
+    assert abs(baseline - jittered) < 0.005
 
 
 def test_domain_sweep_never_crashes_or_leaves_range():
     for light in range(0, 1024, 64):
         for delta in range(-200, 201, 40):
             u = motor_command(light, delta)
-            assert -100 <= u <= 100
+            assert -1 <= u <= 1
