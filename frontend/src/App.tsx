@@ -1,13 +1,24 @@
 import { useEffect, useState } from 'react'
 import { evaluateFuzzy } from './api'
+import ClassroomScene from './components/ClassroomScene'
 import type { FuzzyEvaluateResponse } from './types'
 import './App.css'
 
 function App() {
   const [lightIntensity, setLightIntensity] = useState(742)
   const [lightChange, setLightChange] = useState(38)
+  // Sun angle is a pure presentation parameter (not a fuzzy input): it steers
+  // the directional light vector the floor bands project along. -30..55 keeps
+  // rays pointing downward. Debug overlay is dev-only, hidden for demos.
+  const [sunAngle, setSunAngle] = useState(25)
+  const [debugRays, setDebugRays] = useState(false)
   const [result, setResult] = useState<FuzzyEvaluateResponse | null>(null)
   const [error, setError] = useState<string | null>(null)
+
+  // This effect ONLY refreshes the motor command. The blinds themselves live
+  // inside ClassroomScene as persistent tilt state, integrated per animation
+  // frame — so holding the sliders still never freezes a nonzero command,
+  // and changing inputs updates velocity, never a finite animation.
 
   useEffect(() => {
     const timeoutId = setTimeout(() => {
@@ -29,7 +40,14 @@ function App() {
       <h1>BetterBlinds Fuzzy Simulator</h1>
 
       <section id="main-panels">
-        <div id="scene-placeholder">Classroom scene lands in Phase 4</div>
+        <ClassroomScene
+          lightIntensity={lightIntensity}
+          lightChange={lightChange}
+          motorCommand={result?.motorCommand ?? 0}
+          direction={result?.direction ?? 'stop'}
+          sunAngle={sunAngle}
+          debugRays={debugRays}
+        />
         <div id="fuzzy-panel-placeholder">
           <h2>Fuzzy Panel (Phase 5 will style this)</h2>
           {error && (
@@ -65,6 +83,24 @@ function App() {
             value={lightChange}
             onChange={(e) => setLightChange(Number(e.target.value))}
           />
+        </label>
+        <label>
+          Sun Angle: {sunAngle}°
+          <input
+            type="range"
+            min={5}
+            max={55}
+            value={sunAngle}
+            onChange={(e) => setSunAngle(Number(e.target.value))}
+          />
+        </label>
+        <label className="debug-toggle">
+          <input
+            type="checkbox"
+            checked={debugRays}
+            onChange={(e) => setDebugRays(e.target.checked)}
+          />
+          Show light rays (debug)
         </label>
       </section>
     </div>

@@ -1,0 +1,289 @@
+/* ClassroomScene pixel-art chrome (from assets/references/):
+   dark slate panels (#33484f family), cream text, coral = closing/warning,
+   gold = sun/accents, teal = opening/ok. Chunky 3px borders + hard offset
+   shadows, monospace type with wide letter-spacing. No font downloads —
+   classroom demo machines may be offline. */
+
+.scene {
+  margin: 0;
+  border: 3px solid #1c2b30;
+  border-radius: 6px;
+  overflow: hidden;
+  background: #2b3e44;
+  box-shadow: 6px 6px 0 rgba(0, 0, 0, 0.35);
+}
+
+.scene svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+/* WebGL overlay stage (§33-§34): the SVG defines the box, the transparent
+   Pixi canvas covers exactly that box. pointer-events:none keeps every
+   control, slider, and label driven by the SVG/DOM underneath (§32). */
+.scene-stage {
+  position: relative;
+}
+
+.light-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.light-layer canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+  /* The requested look: soft airbrush light SCREENED over the room.
+     Screen (1-(1-a)(1-b)) brightens luminously without the harsh clipping
+     of additive stacking — highlights bloom, shadows stay deep. */
+  mix-blend-mode: screen;
+}
+
+/* Pixel snap for structural shapes (not text or spinning parts). */
+.px {
+  shape-rendering: crispEdges;
+}
+
+.px-text {
+  font-family: ui-monospace, 'Cascadia Mono', Consolas, monospace;
+  letter-spacing: 2px;
+}
+
+.scene-tag {
+  font-size: 15px;
+  fill: #f2ede0;
+  paint-order: stroke;
+  stroke: #1c2b30;
+  stroke-width: 4px;
+}
+
+.chalk-title {
+  font-size: 17px;
+  fill: #fec837;
+}
+
+.chalk {
+  font-size: 15px;
+  fill: #e8e4da;
+}
+
+.chalk-state {
+  font-size: 16px;
+  fill: #fec837;
+}
+
+.scene-readout {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 10px 14px;
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: 14px;
+  letter-spacing: 1px;
+  color: #f2ede0;
+  background: #22333a;
+  border-top: 3px solid #1c2b30;
+}
+
+/* State badge: the text channel of the 7-state motion language. */
+.state-badge {
+  display: inline-block;
+  padding: 6px 12px;
+  border: 3px solid #1c2b30;
+  box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.45);
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.state-badge.is-stop {
+  background: #5a6b70;
+  color: #f2ede0;
+}
+
+.state-badge.is-close {
+  background: #fd9978;
+  color: #3a1f16;
+}
+
+.state-badge.is-open {
+  background: #2dd4bf;
+  color: #0f2a26;
+}
+
+/* Motor spoke: pure transform rotation (GPU-friendly, no layout work). */
+.rotor {
+  animation-name: rotor-spin;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
+
+@keyframes rotor-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Motion chevrons march in the direction of travel: down = closing. */
+.chev-down {
+  animation-name: chev-march-down;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
+
+.chev-up {
+  animation-name: chev-march-up;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
+
+@keyframes chev-march-down {
+  0% {
+    transform: translateY(-6px);
+    opacity: 0.55;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(6px);
+    opacity: 0.55;
+  }
+}
+
+@keyframes chev-march-up {
+  0% {
+    transform: translateY(6px);
+    opacity: 0.55;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-6px);
+    opacity: 0.55;
+  }
+}
+
+/* Accessibility: rotor + chevrons are decoration — the tilt integration
+   itself is user-driven plant state and keeps running. Only CSS motion
+   is disabled here. */
+@media (prefers-reduced-motion: reduce) {
+  .rotor,
+  .chev-down,
+  .chev-up {
+    animation: none;
+  }
+}
+
+/* Layout for the shell: two panels side by side on desktop, stacked below. */
+#app-shell {
+  padding: 0 24px 40px;
+}
+
+#main-panels {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr;
+  gap: 20px;
+  align-items: start;
+  text-align: left;
+}
+
+#fuzzy-panel-placeholder {
+  border: 3px solid #1c2b30;
+  border-radius: 6px;
+  box-shadow: 6px 6px 0 rgba(0, 0, 0, 0.35);
+  padding: 16px;
+  overflow: auto;
+  background: var(--bg);
+}
+
+#fuzzy-panel-placeholder pre {
+  background: var(--code-bg);
+  border-radius: 8px;
+  padding: 12px;
+  font-size: 13px;
+  max-height: 420px;
+  overflow: auto;
+}
+
+#controls {
+  display: grid;
+  gap: 12px;
+  margin-top: 20px;
+  text-align: left;
+}
+
+#controls label {
+  display: grid;
+  gap: 6px;
+  font-weight: 500;
+  color: var(--text-h);
+}
+
+/* Accessibility: 44px touch target, visible focus,
+   chunky square thumb to match the pixel chrome. */
+#controls input[type='range'] {
+  width: 100%;
+  min-height: 44px;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
+#controls input[type='range']::-webkit-slider-thumb {
+  width: 26px;
+  height: 26px;
+  border-radius: 4px;
+  border: 3px solid #1c2b30;
+  background: #fec837;
+  cursor: pointer;
+}
+
+#controls input[type='range']::-moz-range-thumb {
+  width: 22px;
+  height: 22px;
+  border-radius: 4px;
+  border: 3px solid #1c2b30;
+  background: #fec837;
+  cursor: pointer;
+}
+
+#controls input[type='range']:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* Debug toggle: inline checkbox row (not a grid like the sliders). */
+#controls .debug-toggle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 15px;
+}
+
+#controls .debug-toggle input[type='checkbox'] {
+  width: 22px;
+  height: 22px;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
+.error {
+  color: #b91c1c;
+  background: rgba(220, 38, 38, 0.08);
+  border: 1px solid rgba(220, 38, 38, 0.35);
+  border-radius: 8px;
+  padding: 10px 12px;
+}
+
+@media (max-width: 900px) {
+  #main-panels {
+    grid-template-columns: 1fr;
+  }
+}
