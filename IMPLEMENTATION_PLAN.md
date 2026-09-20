@@ -211,8 +211,8 @@ Use GitHub Projects or this table (copy into a `TRACKING.md` or Project board). 
 | P2-3 | 2 | Flask `/api/fuzzy/evaluate` + CORS | jacy-sangre | `app.py` | done|
 | P3-1 | 3 | Vite+TS scaffold + `types.ts` + `api.ts` | jacy-sangre | `frontend/src/` | done |
 | P4-1 | 4 | SVG classroom scene + blinds animation | yerdnarthc | `ClassroomScene.tsx` | done |
-| P5-1 | 5 | Fuzzy panel (memberships + rules + output) | — (claim) | `FuzzyPanel.tsx` | todo |
-| P6-1 | 6 | MF charts + 3D control surface | — (claim) | `MembershipChart`, `ControlSurface` | todo |
+| P5-1 | 5 | Fuzzy panel (memberships + rules + output) | jacy-sangre | `FuzzyPanel.tsx` | in-progress |
+| P6-1 | 6 | MF charts + 3D control surface | jacy-sangre | `MembershipChart`, `ControlSurface` | todo |
 | P7-1 | 7 | Preset scenarios + edge-case tests | Both (pair) | `TestingPanel`, `tests/` | todo |
 | P8-1 | 8 | Report figures + demo script + polish | Both (pair) | `README`, report doc | todo |
 
