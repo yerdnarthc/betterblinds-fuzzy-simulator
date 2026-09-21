@@ -8,5 +8,12 @@ venv/
 __pycache__/
 *.pyc
 
+# C# / WinForms wrapper (demo branch only)
+BetterBlinds.WinForms/bin/
+BetterBlinds.WinForms/obj/
+*.csproj.user
+.vs/
+backend-dist/
+
 # Local env / secrets (never commit these)
 .env
