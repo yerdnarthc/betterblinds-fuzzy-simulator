@@ -31,6 +31,7 @@ interface LightingLayerProps {
   sunAngleDeg: number // shared light direction, degrees from vertical
   sunLevel: number // 0..1 intensity (how much light exists)
   ambient: number // 0..1 secondary room lift (from admitted light)
+  sunColor: [number, number, number] // tint per preset (Dawn cool → Sunset orange)
 }
 
 export default function LightingLayer(props: LightingLayerProps) {
@@ -116,12 +117,13 @@ async function acquireLightingApp(): Promise<Application> {
 // quarantined here with that justification instead of scattered inline.
 function writeSunUniforms(
   u: Record<string, number | number[]>,
-  s: { dirX: number; dirY: number; sunLevel: number; slatHalfH: number; ambient: number },
+  s: { dirX: number; dirY: number; sunLevel: number; slatHalfH: number; ambient: number; sunColor: [number, number, number] },
 ): void {
   u.uSunDir = [s.dirX, s.dirY]
   u.uSunLevel = s.sunLevel
   u.uSlatHalfH = s.slatHalfH
   u.uAmbient = s.ambient
+  u.uSunColor = s.sunColor
 }
 
 function LightingCanvas({
@@ -129,6 +131,7 @@ function LightingCanvas({
   sunAngleDeg,
   sunLevel,
   ambient,
+  sunColor,
 }: LightingLayerProps) {
   const wrapRef = useRef<HTMLDivElement>(null)
   const meshRef = useRef<Mesh<Geometry, Shader> | null>(null)
@@ -251,8 +254,9 @@ function LightingCanvas({
       sunLevel,
       slatHalfH: projectedHeight(tiltOf(tilt)) / 2,
       ambient,
+      sunColor,
     })
-  }, [tilt, sunAngleDeg, sunLevel, ambient, ready])
+  }, [tilt, sunAngleDeg, sunLevel, ambient, sunColor, ready])
 
   if (failed) return null
   return <div ref={wrapRef} className="light-layer" aria-hidden="true" />

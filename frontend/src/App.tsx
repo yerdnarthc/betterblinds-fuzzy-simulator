@@ -3,6 +3,7 @@ import type { CSSProperties } from 'react'
 import { evaluateFuzzy } from './api'
 import ClassroomScene from './components/ClassroomScene'
 import FuzzyPanel from './components/FuzzyPanel'
+import TestingPanel from './components/TestingPanel'
 import type { FuzzyEvaluateResponse } from './types'
 
 // Plotly (with 3D/gl3d support for the control surface) is a multi-MB
@@ -48,6 +49,12 @@ function App() {
   // rays pointing downward. Debug overlay is dev-only, hidden for demos.
   const [sunAngle, setSunAngle] = useState(25)
   const [debugRays, setDebugRays] = useState(false)
+  const [activePreset, setActivePreset] = useState<string | null>(null)
+  // Clock time tied to presets (B): the clock is a scenario clock, not wall
+  // time. Morning→8:00, Noon→12:00, Cloudy→10:30, Reset→9:00. Sudden
+  // Brightening keeps the clock still (light jump, not time travel).
+  const [clockHour, setClockHour] = useState(9)
+  const [clockMinute, setClockMinute] = useState(0)
   const [result, setResult] = useState<FuzzyEvaluateResponse | null>(null)
   const [error, setError] = useState<string | null>(null)
 
@@ -69,6 +76,37 @@ function App() {
 
   // Effective ΔL: measured by default, hand-asserted on override.
   const lightChange = autoDeltaOn ? Math.round(autoDelta) : manualDelta
+
+  // Preset scenarios — each is a distinct light/sun environment the blinds
+  // must react to. Values chosen to hit different MF regions and rule rows
+  // (Dark→VeryBright × Falling→Rising) so every demo tells a different story.
+  const applyPreset = (
+    preset: 'dawn' | 'morning' | 'noon' | 'cloudy' | 'sunset' | 'sudden' | 'darkening' | 'reset',
+  ) => {
+    const table: Record<string, { light: number; sun: number; delta: number; hour: number; minute: number }> = {
+      dawn: { light: 180, sun: 38, delta: 0, hour: 6, minute: 0 },
+      morning: { light: 380, sun: 32, delta: 0, hour: 8, minute: 0 },
+      noon: { light: 850, sun: 8, delta: 0, hour: 12, minute: 0 },
+      cloudy: { light: 280, sun: 28, delta: 0, hour: 10, minute: 30 },
+      sunset: { light: 320, sun: 35, delta: -8, hour: 18, minute: 0 },
+      sudden: { light: 960, sun: 18, delta: 120, hour: -1, minute: -1 },
+      darkening: { light: 200, sun: 28, delta: -120, hour: -1, minute: -1 },
+      reset: { light: 500, sun: 25, delta: 0, hour: 9, minute: 0 },
+    }
+    const { light, sun, delta, hour, minute } = table[preset]
+    setActivePreset(preset)
+    setLightIntensity(light)
+    setSunAngle(sun)
+    if (hour >= 0) {
+      setClockHour(hour)
+      setClockMinute(minute)
+    }
+    // Keep both stores in sync so the switch between Auto/Manual later
+    // doesn't reveal a stale value from the other mode.
+    setManualDelta(delta)
+    setAutoDelta(delta)
+    lastLight.current = light
+  }
 
   // This effect ONLY refreshes the motor command (blinds live in the scene
   // as persistent tilt state). Changing inputs updates velocity, never a
@@ -104,7 +142,11 @@ function App() {
             direction={result?.direction ?? 'stop'}
             sunAngle={sunAngle}
             debugRays={debugRays}
+            clockHour={clockHour}
+            clockMinute={clockMinute}
+            activePreset={activePreset}
           />
+          <TestingPanel activePreset={activePreset} onPreset={applyPreset} />
         </div>
         <FuzzyPanel result={result} error={error} />
       </section>
@@ -117,7 +159,10 @@ function App() {
             min={0}
             max={1023}
             value={lightIntensity}
-            onChange={(e) => setLightIntensity(Number(e.target.value))}
+            onChange={(e) => {
+              setActivePreset(null)
+              setLightIntensity(Number(e.target.value))
+            }}
           />
         </label>
         <label className="debug-toggle">
@@ -138,7 +183,10 @@ function App() {
             value={manualDelta}
             disabled={autoDeltaOn}
             title={autoDeltaOn ? 'Measured automatically — uncheck Auto ΔL to drive it by hand' : undefined}
-            onChange={(e) => setManualDelta(Number(e.target.value))}
+            onChange={(e) => {
+              setActivePreset(null)
+              setManualDelta(Number(e.target.value))
+            }}
           />
         </label>
         <label>
@@ -148,7 +196,10 @@ function App() {
             min={5}
             max={55}
             value={sunAngle}
-            onChange={(e) => setSunAngle(Number(e.target.value))}
+            onChange={(e) => {
+              setActivePreset(null)
+              setSunAngle(Number(e.target.value))
+            }}
           />
         </label>
         <label className="debug-toggle">

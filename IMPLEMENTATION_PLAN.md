@@ -234,7 +234,7 @@ Use GitHub Projects or this table (copy into a `TRACKING.md` or Project board). 
 | P4-1 | 4 | SVG classroom scene + blinds animation | yerdnarthc | `ClassroomScene.tsx` | done |
 | P5-1 | 5 | Fuzzy panel (memberships + rules + output) | jacy-sangre | `FuzzyPanel.tsx` | done |
 | P6-1 | 6 | MF charts + 3D control surface | jacy-sangre | `MembershipChart`, `ControlSurface` | done |
-| P7-1 | 7 | Preset scenarios + edge-case tests | Both (pair) | `TestingPanel`, `tests/` | todo |
+| P7-1 | 7 | Preset scenarios + edge-case tests | yerdnarthc | `TestingPanel`, `tests/` | done |
 | P8-1 | 8 | Report figures + demo script + polish | Both (pair) | `README`, report doc | todo |
 
 Daily 10-min sync: what merged, what's in-review, did the contract change?
@@ -342,4 +342,4 @@ No Next.js, Node backend, DB, auth, Docker, MQTT/ESP32, weather API, ML/CV, mobi
 
 ---
 
-*Phases 0–6 complete: P0-1 repo hygiene, P1-1 frozen `config.py` + rule matrix + `docs/figures/mf-*.png`, P2-1 `membership.py` + tests, P2-2 `rules.py` / `inference.py` / centroid, P2-3 `POST /api/fuzzy/evaluate`, P3-1 frontend shell (`types.ts` / `api.ts` / sliders → live JSON), P4-1 SVG classroom scene + integrated blinds + directional lighting (tilt plant, WebGL, auto ΔL), P5-1 Fuzzy panel (memberships, rule matrix, active rules, aggregated output, "Explain Current Output"), P6-1 `GET /api/fuzzy/surface` + `GET /api/fuzzy/membership-curves` (`backend/fuzzy/surface.py`, reuses the evaluate pipeline) + `MembershipChart.tsx` / `ControlSurface.tsx` (Plotly, lazy-loaded). Next: P7-1 Preset scenarios + edge-case tests — branch fresh from updated `main` and claim it in §5.4.*
+*Phases 0–7 complete: P0-1 repo hygiene, P1-1 frozen `config.py` + rule matrix + `docs/figures/mf-*.png`, P2-1 `membership.py` + tests, P2-2 `rules.py` / `inference.py` / centroid, P2-3 `POST /api/fuzzy/evaluate`, P3-1 frontend shell (`types.ts` / `api.ts` / sliders → live JSON), P4-1 SVG classroom scene + integrated blinds + directional lighting (tilt plant, WebGL, auto ΔL), P5-1 Fuzzy panel (memberships, rule matrix, active rules, aggregated output, "Explain Current Output"), P6-1 `GET /api/fuzzy/surface` + `GET /api/fuzzy/membership-curves` (`backend/fuzzy/surface.py`, reuses the evaluate pipeline) + `MembershipChart.tsx` / `ControlSurface.tsx` (Plotly, lazy-loaded), P7-1 `TestingPanel.tsx` (8 presets: Dawn/Morning/Noon/Cloudy/Sunset/Sudden Brightening/Darkening/Reset) + `docs/PHASE7.md` (17 pytest pass, 2 screenshots). Next: P8-1 Report figures + demo script + polish — branch fresh from updated `main` and claim it in §5.4.*

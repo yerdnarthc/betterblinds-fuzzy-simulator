@@ -398,3 +398,97 @@
     padding-top: 0;
   }
 }
+
+/* Preset bar: sits immediately below the scene, anchored so it's always
+   visible without scrolling. Same chunky-rectangle system as the rest. */
+.scene-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-width: 0;
+}
+
+.preset-bar {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.preset-btn {
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  line-height: 1;
+  padding: 12px 8px;
+  border: 3px solid #1c2b30;
+  border-radius: 6px;
+  background: var(--bg-elevated);
+  color: var(--text-h);
+  box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.45);
+  cursor: pointer;
+  transition:
+    transform 0.08s,
+    box-shadow 0.08s,
+    background 0.15s,
+    color 0.15s;
+}
+
+.preset-btn:hover {
+  background: #1f3440;
+}
+
+.preset-btn:active {
+  transform: translate(2px, 2px);
+  box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.45);
+}
+
+.preset-btn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.preset-btn--accent {
+  background: var(--accent);
+  color: #1a1400;
+  border-color: #1c2b30;
+}
+
+.preset-btn--accent:hover {
+  background: #ffd84d;
+}
+
+.preset-btn--ghost {
+  background: transparent;
+  color: var(--text-dim);
+}
+
+.preset-btn--ghost:hover {
+  background: var(--bg-elevated);
+  color: var(--text-h);
+}
+
+.preset-btn.is-active,
+.preset-btn.is-active:hover,
+.preset-btn[aria-pressed='true'] {
+  background: var(--accent);
+  color: #1a1400;
+  border-color: #1c2b30;
+  transform: translate(2px, 2px);
+  box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.45);
+}
+
+.preset-btn.is-active:focus-visible {
+  outline: 2px solid var(--text-h);
+  outline-offset: 2px;
+}
+
+@media (max-width: 640px) {
+  .preset-bar {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .preset-bar .preset-btn:last-child {
+    grid-column: 1 / -1;
+  }
+}
