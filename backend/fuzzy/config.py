@@ -1,30 +1,21 @@
 """
-config.py — single source of truth for the fuzzy math (Phase 1).
-
-Both devs must agree before changing numbers here.
-`frontend/src/types.ts` mirrors this on the TS side.
+config.py — single source of truth for the fuzzy math
 
 Terminology:
 - Light L: 0–1023 from Arduino analogRead (10-bit ADC, 2^10 = 1024 steps).
-  Anchors IMRAD paper: normal ~200–300 avg 249.8, harsh ~700–900 avg 819.2.
 - Delta ΔL = L_t − L_{t-1}: how fast light is changing per tick.
   ±200 is ~20% of the 0–1023 span — big enough for "sudden brightening"
   (e.g. +150) without forcing an unlikely ±500 jump.
 - Motor U: −100…+100 signed percent. −100 fast open, 0 stop, +100 fast close.
-  Simulation does:  pos = clamp(pos + k*U, 0, 100).  k is just a speed knob.
 
 Shapes:
 - "tri"  = triangular: (a, b, c) where b is the peak (membership = 1).
 - "trap" = trapezoidal: (a, b, c, d) flat top b→c at 1, ramps a→b and c→d.
   Edges use traps so values beyond the range still belong fully to one set.
-
-Calibration rule: every x must belong to ≥1 set, and at every boundary
-two sets overlap 25–50%. No gaps, no dead zones. Placeholder numbers
-below — tune together while checking T7 (499 vs 500 smooth) and T8 (jitter).
 """
 
 # ---------------------------------------------------------------------------
-# Domains — the outer limits. Change these only if you re-derive the paper.
+# Domains — the outer limits.
 # ---------------------------------------------------------------------------
 LIGHT_RANGE = (0, 1023)             # L
 DELTA_LIGHT_RANGE = (-200, 200)     # ΔL
@@ -32,9 +23,6 @@ MOTOR_RANGE = (-100, 100)           # U
 
 # ---------------------------------------------------------------------------
 # Light MFs (Membership Functions) — 4 sets.  
-# TODO: both devs calibrate these numbers together.
-# Hint: put the Moderate→Bright transition inside 251–818 (the vague middle),
-# and make VeryBright cover the 700–900 harsh band from the paper averages.
 # ---------------------------------------------------------------------------
 LIGHT_MFS = {
     # Dark: covers normal light and below. Trap so 0–~180 is fully dark.
@@ -106,13 +94,11 @@ MOTOR_MFS = {
 
 # ---------------------------------------------------------------------------
 # Rule matrix — 12 rules, R01–R12.  Light × Delta → Motor.
-# Starter from the plan; row justifications: write one sentence each for
-# the report (why "Bright + Falling → Stop" not "FastClose", etc.).
 #
 # RULE MATRIX TABLE
 #
 #  Light          | Falling    | Stable     | Rising
-#  ---------------+------------+------------+---------------------------
+#  ---------------+------------+------------+--------------------------------
 #  Dark           | FastOpen   | SlowOpen   | Stop       (R01, R02, R03)
 #  Moderate       | SlowOpen   | Stop       | SlowClose  (R04, R05, R06)
 #  Bright         | Stop       | SlowClose  | FastClose  (R07, R08, R09)
@@ -200,12 +186,11 @@ RULES = [
 ]
 
 # ---------------------------------------------------------------------------
-# Mamdani knobs — pin these so inference.py has no magic numbers.
+# Mamdani knobs:
 # and = how to combine Light AND Delta; min is the textbook choice.
 # implication = clip each output MF at the rule's activation; also min.
 # aggregation = merge all clipped outputs; max (take the envelope).
-# samples = how finely to sample U (−100…+100) for centroid. 1001 steps
-#           gives 0.2-unit resolution — fine for a demo.
+# samples = how finely to sample U (−100…+100) for centroid. 1001 steps - gives 0.2-unit resolution
 # ---------------------------------------------------------------------------
 MAMDANI = {
     "and": "min",
@@ -213,7 +198,3 @@ MAMDANI = {
     "aggregation": "max",
     "samples": 1001,
 }
-
-# Quick check for your pair hand-test (IMPLEMENTATION_PLAN.md Phase 1 gate):
-# L=742, ΔL=+38 should light up Bright + Rising and VeryBright + Rising
-# and defuzzify near FastClose (~+60…+75 with the placeholders above).

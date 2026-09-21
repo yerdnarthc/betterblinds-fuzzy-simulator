@@ -4,9 +4,7 @@
 def centroid(xs, ys):
     """sum(x*y) / sum(y) over the sampled (xs, ys) curve from inference.aggregate().
 
-    Returns 0.0 (Stop) if nothing fired at all — shouldn't happen given the
-    input MFs cover the full domain with no gaps, but it's a safe default
-    rather than a divide-by-zero crash.
+    Returns 0.0 (Stop) if nothing fired at all
     """
     total_weight = sum(ys)
     if total_weight == 0:

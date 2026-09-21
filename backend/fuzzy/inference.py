@@ -11,13 +11,8 @@ from .membership import evaluate_mf
 
 
 def sample_points(samples=None):
-    """`samples` evenly spaced x-values across MOTOR_RANGE.
-
-    Defaults to MAMDANI["samples"] (config.py's frozen resolution for
-    /api/fuzzy/evaluate). Callers that re-run this many times per request
-    (the Phase 6 control-surface sweep) may pass a smaller override —
-    see fuzzy/surface.py for why that's a safe trade-off.
-    """
+    """`samples` evenly spaced x-values across MOTOR_RANGE."""
+    
     lo, hi = MOTOR_RANGE
     n = samples if samples is not None else MAMDANI["samples"]
     step = (hi - lo) / (n - 1)
