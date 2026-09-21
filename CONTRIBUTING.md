@@ -1,8 +1,4 @@
-# Contributing — Pair Workflow
-
-How the two of us develop without stepping on each other. No fixed Dev A / Dev B zones — both of us work the fuzzy backend so both can defend it in Q&A.
-
-Full context: [`IMPLEMENTATION_PLAN.md`](./IMPLEMENTATION_PLAN.md) (§4 shared codebase map, §5 pair workflow, §5.4 task board).
+# Contributing: Pair Workflow
 
 ## Golden rule
 
@@ -82,5 +78,5 @@ Then re-run checks: backend `pytest`, frontend `npm run build`.
 
 ## Oops recovery
 
-- Committed on `main` by accident? Don't push. Run `git checkout -b <new-branch-name>` immediately — the commit moves with you — then `git checkout main && git reset --hard origin/main`.
-- Pushed something bad to your *feature* branch? Fix it with a new commit and push again — never rewrite `main`'s history.
+- Committed on `main` by accident? Don't push. Run `git checkout -b <new-branch-name>` immediately. The commit moves with you. Then `git checkout main && git reset --hard origin/main`.
+- Pushed something bad to your *feature* branch? Fix it with a new commit and push again. Never rewrite `main`'s history.
