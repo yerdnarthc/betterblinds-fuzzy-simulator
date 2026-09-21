@@ -1,10 +1,4 @@
-"""Rule evaluation — Mamdani AND (min) of each rule's two antecedents.
-
-Each of the 12 rules in config.RULES says: IF light IS <light-set> AND
-delta IS <delta-set> THEN output IS <motor-set>. "AND" for Mamdani is
-min() of the two membership degrees — the rule can only fire as strongly
-as its weakest antecedent.
-"""
+"""Rule evaluation — Mamdani AND (min) of each rule's two antecedents."""
 
 from .config import RULES
 
